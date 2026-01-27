@@ -1,0 +1,95 @@
+.invite-accept-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.invite-accept-container {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 100%;
+  padding: 40px;
+  text-align: center;
+}
+
+.invite-header h1 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.invite-content {
+  margin-top: 30px;
+}
+
+.invite-message {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.team-info-card {
+  background: #f9f9f9;
+  border-radius: 12px;
+  padding: 30px;
+  margin-bottom: 30px;
+  border: 2px solid #e0e0e0;
+}
+
+.team-info-card h2 {
+  font-size: 1.5rem;
+  color: #667eea;
+  margin-bottom: 10px;
+}
+
+.team-info-card p {
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.btn-large {
+  width: 100%;
+  padding: 14px 28px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.loading-container,
+.error-container {
+  background: white;
+  border-radius: 16px;
+  padding: 60px 40px;
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-container h2 {
+  color: #e74c3c;
+  margin-bottom: 15px;
+}
+
+.error-container p {
+  color: #666;
+  margin-bottom: 25px;
+}

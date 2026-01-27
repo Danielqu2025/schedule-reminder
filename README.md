@@ -241,7 +241,7 @@ ALTER TABLE schedules ADD CONSTRAINT check_status
 4. 点击 **Run** 执行 SQL
 5. 确认执行成功（应显示 "Success. No rows returned"）
 
-> 💡 **提示**：如需启用团队功能，请参考 [DATABASE_SETUP.md](./DATABASE_SETUP.md) 中的团队版本配置。
+> 💡 **提示**：如需启用团队功能，请继续执行下面的"团队功能数据库配置"步骤。
 
 #### 5.2 配置认证
 
@@ -294,6 +294,84 @@ npm run dev
 ```
 
 浏览器会自动打开 http://localhost:3000
+
+---
+
+## 🏢 团队功能数据库配置（可选）
+
+如果您需要使用团队协作功能，需要执行以下步骤：
+
+### 步骤 1：执行团队版本 SQL 脚本
+
+1. 在 Supabase Dashboard 中，点击 **SQL Editor**
+2. 点击 **New query**
+3. 执行以下 SQL 脚本（按顺序）：
+
+**步骤 1.1：执行完整数据库设置**
+```sql
+-- 打开并执行：docs/sql/TEAM_DATABASE_COMPLETE.sql
+-- 这会创建所有表、索引、约束、触发器和 RLS 策略
+```
+
+**步骤 1.2：添加邀请功能（可选）**
+```sql
+-- 打开并执行：docs/sql/TEAM_INVITATIONS_SETUP.sql
+-- 这会添加邮箱邀请功能
+```
+
+**重要提示**：
+- ✅ **不需要删除 `schedules` 表**：个人功能和团队功能可以共存
+- ✅ SQL 脚本使用 `CREATE TABLE IF NOT EXISTS`，不会覆盖现有表
+- ✅ 脚本包含完整的表结构、索引、约束、触发器和 RLS 策略
+- ✅ 所有递归问题已修复
+
+### 步骤 2：验证表已创建
+
+1. 在 Supabase Dashboard 中，点击 **Table Editor**
+2. 确认以下表已创建：
+   - ✅ `teams` - 团队表
+   - ✅ `team_members` - 团队成员表
+   - ✅ `work_groups` - 工作组表
+   - ✅ `work_group_members` - 工作组成员表
+   - ✅ `tasks` - 任务表
+   - ✅ `work_items` - 工作子项表
+   - ✅ `work_item_status_history` - 状态历史表
+   - ✅ `task_comments` - 评论表
+   - ✅ `team_invitations` - 团队邀请表（如果执行了邀请功能脚本）
+
+### 步骤 3：验证 RLS 策略
+
+执行以下 SQL 查询检查策略数量：
+
+```sql
+SELECT 
+  tablename,
+  COUNT(*) as policy_count
+FROM pg_policies
+WHERE schemaname = 'public'
+GROUP BY tablename
+ORDER BY tablename;
+```
+
+预期结果：
+- `teams`: 4 个策略
+- `team_members`: 4 个策略
+- `work_groups`: 4 个策略
+- `work_group_members`: 4 个策略
+- `tasks`: 4 个策略
+- `work_items`: 4 个策略
+- `task_comments`: 4 个策略
+- `work_item_status_history`: 1 个策略
+
+### 步骤 4：测试团队功能
+
+1. 刷新应用页面
+2. 点击左侧导航的 **"团队"**
+3. 点击 **"创建团队"**
+4. 填写团队信息并提交
+5. 如果创建成功，说明配置正确
+
+> 📖 **详细说明**：如需更多帮助，请查看 [团队功能配置指南](./docs/TEAM_SETUP_GUIDE.md) 或 [数据库设置文档](./DATABASE_SETUP.md)
 
 ---
 
@@ -439,10 +517,18 @@ schedule-reminder/
 │
 ├── 📁 docs/                        # 文档目录
 │   ├── 📁 sql/                     # SQL 脚本
-│   │   ├── TEAM_VERSION_SETUP.sql  # 团队版本数据库脚本
-│   │   └── MIGRATION_EXECUTE.sql   # 数据迁移脚本
+│   │   ├── TEAM_DATABASE_COMPLETE.sql  # 完整数据库设置脚本 ⭐（推荐）
+│   │   ├── TEAM_INVITATIONS_SETUP.sql  # 团队邀请功能脚本 ⭐
+│   │   ├── FIX_RLS_RECURSION.sql       # 修复 RLS 递归问题
+│   │   ├── FIX_TEAM_INVITATION_FUNCTION_SIMPLE.sql  # 修复邀请函数栈溢出
+│   │   ├── MIGRATION_EXECUTE.sql       # 数据迁移脚本
+│   │   └── README.md                   # SQL 文件说明文档
+│   ├── TEAM_SETUP_GUIDE.md         # 团队功能配置指南 ⭐
+│   ├── VERIFY_DATABASE_SETUP.md    # 数据库设置验证指南
+│   ├── GIT_GUIDE.md                # Git 使用指南
 │   ├── FIXES_SUMMARY.md            # 修复总结
-│   └── TROUBLESHOOTING.md          # 故障排除指南
+│   ├── TROUBLESHOOTING.md          # 故障排除指南
+│   └── PROJECT_ORGANIZATION.md     # 项目整理总结
 │
 ├── 📁 public/                      # 静态资源
 │   └── vite.svg                    # 网站图标
@@ -577,6 +663,46 @@ const { data, error } = await supabase
 - 检查 Network 标签的网络请求
 - 确认 Supabase 配置正确
 
+### 7. 创建团队失败：找不到 teams 表
+
+**问题**：创建团队时提示 `Could not find the table 'public.teams'`
+
+**原因**：数据库中还没有创建团队功能所需的表
+
+**解决**：
+1. 打开 Supabase Dashboard → SQL Editor
+2. 执行 `docs/sql/TEAM_DATABASE_COMPLETE.sql` 文件中的完整 SQL 脚本
+3. 验证所有表已创建（在 Table Editor 中查看）
+4. 验证 RLS 策略已配置（执行策略查询 SQL）
+5. 刷新应用页面并再次尝试创建团队
+
+📖 **详细步骤**：查看 [团队功能配置指南](./docs/TEAM_SETUP_GUIDE.md) 获取完整解决方案
+
+### 8. 表显示 "UNRESTRICTED" 标签
+
+**问题**：在 Supabase Table Editor 中看到某些表显示 "UNRESTRICTED"
+
+**原因**：RLS 策略未正确配置
+
+**解决**：
+1. 执行 `docs/sql/TEAM_DATABASE_COMPLETE.sql` 中的完整 SQL 脚本（包含所有 RLS 策略）
+2. 或执行 `docs/sql/FIX_RLS_RECURSION.sql` 修复 RLS 策略
+3. 刷新 Table Editor，确认 "UNRESTRICTED" 标签消失
+
+📖 **验证方法**：执行策略查询 SQL 确认所有表都有正确的策略数量
+
+### 9. 邀请成员失败：栈溢出错误
+
+**问题**：邀请成员时提示 `stack depth limit exceeded` 或 `54001` 错误
+
+**原因**：`create_team_invitation` 函数中存在 RLS 递归问题
+
+**解决**：
+1. 执行 `docs/sql/FIX_TEAM_INVITATION_FUNCTION_SIMPLE.sql` 修复函数
+2. 或重新执行 `docs/sql/TEAM_INVITATIONS_SETUP.sql`（已更新）
+
+📖 **详细说明**：查看 [邮箱邀请功能设置指南](./docs/EMAIL_INVITATION_SETUP.md)
+
 ---
 
 ## 📚 文档导航
@@ -600,6 +726,8 @@ const { data, error } = await supabase
 
 | 文档 | 说明 | 位置 |
 |------|------|------|
+| **团队功能配置指南** | 团队功能数据库配置和问题解决 | [docs/TEAM_SETUP_GUIDE.md](./docs/TEAM_SETUP_GUIDE.md) ⭐ |
+| **数据库设置验证** | 数据库配置验证和 RLS 策略检查 | [docs/VERIFY_DATABASE_SETUP.md](./docs/VERIFY_DATABASE_SETUP.md) ⭐ |
 | **Git 使用指南** | Git 命令和上传指南 | [docs/GIT_GUIDE.md](./docs/GIT_GUIDE.md) |
 | **故障排除** | 常见问题解决方案 | [docs/TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md) |
 | **修复总结** | 已修复的问题列表 | [docs/FIXES_SUMMARY.md](./docs/FIXES_SUMMARY.md) |
@@ -638,7 +766,15 @@ const { data, error } = await supabase
 
 ## 📝 更新日志
 
-### v2.0.0 (当前版本)
+### v2.0.1 (当前版本)
+
+- ✅ 完整的数据库配置脚本（包含所有 RLS 策略）
+- ✅ 完整的文档更新（不再使用补丁式更新）
+- ✅ 数据库验证指南
+- ✅ Git 使用指南
+- ✅ 项目文件整理和优化
+
+### v2.0.0
 
 - ✅ React + TypeScript 重构
 - ✅ Vite 构建工具
@@ -706,3 +842,23 @@ git push -u origin main
 ```
 
 📖 **详细指南**：查看 [Git 使用指南](./docs/GIT_GUIDE.md) 获取完整的 Git 命令说明和常见问题解答。
+
+---
+
+## 📊 数据库配置总结
+
+### 个人功能数据库
+- **表**：`schedules`
+- **RLS 策略**：4 个（SELECT, INSERT, UPDATE, DELETE）
+- **配置脚本**：在 README.md 步骤 5.1 中提供
+
+### 团队功能数据库
+- **表**：8 个核心表（teams, team_members, work_groups, work_group_members, tasks, work_items, work_item_status_history, task_comments）
+- **RLS 策略**：所有表都有完整的策略配置
+- **配置脚本**：`docs/sql/TEAM_VERSION_SETUP.sql` ⭐（完整配置）
+
+### 重要提示
+- ✅ 两个功能可以共存，不需要删除 `schedules` 表
+- ✅ `TEAM_VERSION_SETUP.sql` 是完整的、生产就绪的脚本
+- ✅ 所有表都应该显示地球图标（🌐），不应该有 "UNRESTRICTED" 标签
+- ✅ 执行脚本后，请验证策略数量是否正确

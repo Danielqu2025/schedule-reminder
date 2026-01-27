@@ -5,16 +5,24 @@ import './WorkItemPage.css';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { format, addHours, differenceInHours, parseISO } from 'date-fns';
 
+interface TeamMember {
+  id: string;
+  email?: string;
+  name?: string;
+}
+
 export default function WorkItemPage() {
   const [searchParams] = useSearchParams();
   const taskId = searchParams.get('taskId');
   const navigate = useNavigate();
+  const { showSuccess, showError, ToastContainer } = useToast();
   
   const [task, setTask] = useState<Task | null>(null);
   const [workItems, setWorkItems] = useState<WorkItem[]>([]);
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [comments, setComments] = useState<TaskComment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -85,7 +93,7 @@ export default function WorkItemPage() {
           .single();
         
         if (!memberCheck) {
-          alert('您没有权限访问此任务');
+          showError('您没有权限访问此任务');
           navigate('/tasks');
           return;
         }
@@ -121,9 +129,10 @@ export default function WorkItemPage() {
           .eq('team_id', taskData.team_id);
         setTeamMembers(memberData || []);
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('加载数据失败:', error);
-      alert('加载失败: ' + error.message);
+      const errorMessage = error instanceof Error ? error.message : '加载失败，请重试';
+      showError(errorMessage);
       navigate('/tasks');
     } finally {
       setLoading(false);
@@ -165,10 +174,20 @@ export default function WorkItemPage() {
     e.preventDefault();
     if (!taskId) return;
 
+    // 表单验证
+    const titleValidation = validateLength(formData.title, 1, 255, '工作子项标题');
+    if (!titleValidation.isValid) {
+      showError(titleValidation.error || '验证失败');
+      return;
+    }
+
+    if (submitting) return; // 防止重复提交
+    setSubmitting(true);
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        alert('请先登录');
+        showError('请先登录');
         return;
       }
 
@@ -204,11 +223,14 @@ export default function WorkItemPage() {
         objectives: '',
         collaborators: []
       });
+      showSuccess('工作子项添加成功！');
       loadData();
-    } catch (error: any) {
+    } catch (error) {
       console.error('添加工作子项失败:', error);
-      const errorMessage = error.message || '添加失败，请重试';
-      alert(`添加失败: ${errorMessage}`);
+      const errorMessage = error instanceof Error ? error.message : '添加失败，请重试';
+      showError(errorMessage);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -223,11 +245,12 @@ export default function WorkItemPage() {
         .eq('id', id);
 
       if (error) throw error;
+      showSuccess('进度更新成功');
       loadData();
-    } catch (error: any) {
+    } catch (error) {
       console.error('更新进度失败:', error);
-      const errorMessage = error.message || '更新失败，请重试';
-      alert(`更新进度失败: ${errorMessage}`);
+      const errorMessage = error instanceof Error ? error.message : '更新失败，请重试';
+      showError(errorMessage);
     }
   };
 
@@ -247,16 +270,22 @@ export default function WorkItemPage() {
 
       if (error) throw error;
       setCommentContent('');
+      showSuccess('评论添加成功');
       loadData();
-    } catch (error: any) {
+    } catch (error) {
       console.error('评论失败:', error);
-      const errorMessage = error.message || '评论失败，请重试';
-      alert(`评论失败: ${errorMessage}`);
+      const errorMessage = error instanceof Error ? error.message : '评论失败，请重试';
+      showError(errorMessage);
     }
   };
 
   // 阶段分组逻辑
-  const groupedWorkItems = workItems.reduce((acc: any[], item) => {
+  interface GroupedWorkItem {
+    type: 'parallel' | 'sequential';
+    items: WorkItem[];
+  }
+
+  const groupedWorkItems = workItems.reduce((acc: GroupedWorkItem[], item) => {
     if (item.execution_order === 'parallel') {
       acc.push({ type: 'parallel', items: [item] });
     } else {
@@ -413,7 +442,7 @@ export default function WorkItemPage() {
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '6px', color: '#374151' }}>执行方式</label>
               <select 
                 value={formData.execution_order} 
-                onChange={(e) => setFormData({...formData, execution_order: e.target.value as any})}
+                onChange={(e) => setFormData({...formData, execution_order: e.target.value as 'parallel' | 'sequential'})}
                 style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '0.9rem', backgroundColor: 'white' }}
               >
                 <option value="parallel">并行 (所有子项可同时进行)</option>
@@ -524,8 +553,23 @@ export default function WorkItemPage() {
                 style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px', height: '100px', fontSize: '0.9rem', resize: 'vertical' }}
               />
             </div>
-            <button type="submit" style={{ width: '100%', background: '#4f46e5', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.95rem' }}>
-              确认添加
+            <button 
+              type="submit" 
+              disabled={submitting}
+              style={{ 
+                width: '100%', 
+                background: submitting ? '#9ca3af' : '#4f46e5', 
+                color: 'white', 
+                border: 'none', 
+                padding: '12px', 
+                borderRadius: '8px', 
+                cursor: submitting ? 'not-allowed' : 'pointer', 
+                fontWeight: 600, 
+                fontSize: '0.95rem',
+                transition: 'all 0.2s'
+              }}
+            >
+              {submitting ? '添加中...' : '确认添加'}
             </button>
           </form>
         </div>
@@ -558,6 +602,7 @@ export default function WorkItemPage() {
           )}
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 }

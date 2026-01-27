@@ -11,29 +11,88 @@ import TeamManagementPage from './pages/TeamManagementPage';
 import TaskManagementPage from './pages/TaskManagementPage';
 import WorkItemPage from './pages/WorkItemPage';
 import StatisticsPage from './pages/StatisticsPage';
+import InviteAcceptPage from './pages/InviteAcceptPage';
 
 // 布局组件
 import Layout from './components/Layout/Layout';
 import { useReminderEngine } from './hooks/useReminderEngine';
 
 // Error Boundary 组件
-class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends Component<{ children: ReactNode }, ErrorBoundaryState> {
   constructor(props: { children: ReactNode }) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null };
   }
 
-  static getDerivedStateFromError() {
-    return { hasError: true };
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    // 记录错误到控制台（生产环境可以发送到错误追踪服务）
+    console.error('应用错误:', error);
+    console.error('错误信息:', errorInfo);
+    
+    // 生产环境可以发送到错误追踪服务
+    // if (import.meta.env.PROD) {
+    //   // 发送到 Sentry 或其他错误追踪服务
+    // }
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div style={{ padding: '40px', textAlign: 'center' }}>
-          <h2>出错了</h2>
-          <p>很抱歉，应用程序发生了预期外的错误。</p>
-          <button className="btn-primary" onClick={() => window.location.reload()}>刷新页面</button>
+        <div style={{ 
+          padding: '40px', 
+          textAlign: 'center',
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          background: 'var(--bg-main)'
+        }}>
+          <div style={{ fontSize: '64px', marginBottom: '20px' }}>⚠️</div>
+          <h2 style={{ marginBottom: '12px', color: 'var(--text-dark)' }}>出错了</h2>
+          <p style={{ marginBottom: '24px', color: 'var(--text-muted)' }}>
+            很抱歉，应用程序发生了预期外的错误。
+          </p>
+          {this.state.error && import.meta.env.DEV && (
+            <details style={{ 
+              marginBottom: '24px', 
+              textAlign: 'left',
+              maxWidth: '600px',
+              padding: '16px',
+              background: 'var(--card-bg)',
+              borderRadius: 'var(--radius-md)',
+              fontSize: '12px'
+            }}>
+              <summary style={{ cursor: 'pointer', marginBottom: '8px' }}>错误详情（开发模式）</summary>
+              <pre style={{ 
+                overflow: 'auto',
+                color: 'var(--danger)',
+                fontSize: '11px'
+              }}>
+                {this.state.error.toString()}
+                {this.state.error.stack}
+              </pre>
+            </details>
+          )}
+          <button 
+            className="btn-primary" 
+            onClick={() => {
+              this.setState({ hasError: false, error: null });
+              window.location.reload();
+            }}
+            style={{ padding: '12px 24px' }}
+          >
+            刷新页面
+          </button>
         </div>
       );
     }
@@ -100,6 +159,10 @@ function App() {
         <Route 
           path="/login" 
           element={user ? <Navigate to="/" replace /> : <LoginPage />} 
+        />
+        <Route
+          path="/invite/accept"
+          element={<InviteAcceptPage />}
         />
         <Route
           path="/"

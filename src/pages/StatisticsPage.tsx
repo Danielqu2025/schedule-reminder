@@ -92,6 +92,7 @@ export default function StatisticsPage() {
 
     } catch (error) {
       console.error('加载数据失败:', error);
+      // 统计页面错误不显示 Toast，避免干扰
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
+import { useToast } from '../hooks/useToast';
+import { validateEmail, validatePassword } from '../utils/validation';
 import './LoginPage.css';
 
 export default function LoginPage() {
@@ -11,9 +13,36 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectPath = searchParams.get('redirect');
+
+  const { showSuccess, showError, ToastContainer } = useToast();
+
+  useEffect(() => {
+    // 检查是否有待处理的邀请令牌
+    const pendingToken = localStorage.getItem('pending_invitation_token');
+    if (pendingToken && redirectPath) {
+      // 如果登录后需要处理邀请，显示提示
+      console.log('检测到待处理的邀请');
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 表单验证
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
+      setError(emailValidation.error || '验证失败');
+      return;
+    }
+
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      setError(passwordValidation.error || '验证失败');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -24,17 +53,32 @@ export default function LoginPage() {
           password,
         });
         if (error) throw error;
-        alert('注册成功！请检查邮箱验证链接（如果已启用邮箱验证）');
+        showSuccess('注册成功！请检查邮箱验证链接（如果已启用邮箱验证）');
+        // 清空表单
+        setEmail('');
+        setPassword('');
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
-        navigate('/');
+        showSuccess('登录成功！');
+        
+        // 检查是否有待处理的邀请
+        const pendingToken = localStorage.getItem('pending_invitation_token');
+        if (pendingToken && redirectPath) {
+          // 清除令牌并跳转到邀请确认页面
+          localStorage.removeItem('pending_invitation_token');
+          navigate(redirectPath);
+        } else {
+          navigate('/');
+        }
       }
-    } catch (err: any) {
-      setError(err.message || '操作失败');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '操作失败';
+      setError(errorMessage);
+      showError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -110,6 +154,7 @@ export default function LoginPage() {
           </form>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 

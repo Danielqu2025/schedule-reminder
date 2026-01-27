@@ -149,7 +149,13 @@ export function useReminderEngine(userId: string | undefined) {
       const now = new Date();
       const soon = addMinutes(now, 15);
 
-      workItems.forEach((item: any) => {
+      interface WorkItemData {
+        id: number;
+        title: string;
+        planned_start_time?: string;
+      }
+
+      workItems.forEach((item: WorkItemData) => {
         const cacheId = `workitem-${item.id}`;
         if (!item.planned_start_time || remindedIds.current.has(cacheId)) return;
 

@@ -2,7 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { Task, Team, WorkGroup } from '../types/database';
+import { useToast } from '../hooks/useToast';
+import { validateLength, validateDateRange } from '../utils/validation';
 import './TaskManagementPage.css';
+
+interface TeamMemberWithTeam {
+  team_id: number;
+  teams: Team | null;
+}
 
 export default function TaskManagementPage() {
   const navigate = useNavigate();
@@ -11,6 +18,8 @@ export default function TaskManagementPage() {
   const [workGroups, setWorkGroups] = useState<WorkGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const { showSuccess, showError, ToastContainer } = useToast();
   
   const [teamFilter, setTeamFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -47,12 +56,13 @@ export default function TaskManagementPage() {
         .eq('user_id', user.id);
 
       const teamsData = (memberData || [])
-        .map((item: any) => item.teams)
-        .filter((team: any) => team !== null);
+        .map((item: TeamMemberWithTeam) => item.teams)
+        .filter((team: Team | null): team is Team => team !== null);
       
       setTeams(teamsData || []);
     } catch (error) {
       console.error('加载基础数据失败:', error);
+      showError('加载基础数据失败');
     }
   };
 
@@ -91,6 +101,7 @@ export default function TaskManagementPage() {
       setTasks(data || []);
     } catch (error) {
       console.error('加载任务失败:', error);
+      showError('加载任务失败，请刷新页面重试');
     } finally {
       setLoading(false);
     }
@@ -108,11 +119,36 @@ export default function TaskManagementPage() {
 
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 表单验证
+    if (!formData.team_id) {
+      showError('请选择目标团队');
+      return;
+    }
+
+    const titleValidation = validateLength(formData.title, 1, 255, '任务标题');
+    if (!titleValidation.isValid) {
+      showError(titleValidation.error || '验证失败');
+      return;
+    }
+
+    if (formData.start_date && formData.end_date) {
+      const dateValidation = validateDateRange(formData.start_date, formData.end_date);
+      if (!dateValidation.isValid) {
+        showError(dateValidation.error || '验证失败');
+        return;
+      }
+    }
+
+    if (submitting) return; // 防止重复提交
+    setSubmitting(true);
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      if (!formData.team_id) return;
+      if (!user) {
+        showError('请先登录');
+        return;
+      }
 
       const { error } = await supabase.from('tasks').insert({
         team_id: parseInt(formData.team_id),
@@ -138,9 +174,14 @@ export default function TaskManagementPage() {
         start_date: '',
         end_date: '',
       });
+      showSuccess('任务创建成功！');
       loadTasks();
-    } catch (error: any) {
-      alert(`创建任务失败: ${error.message}`);
+    } catch (error) {
+      console.error('创建任务失败:', error);
+      const errorMessage = error instanceof Error ? error.message : '创建任务失败，请重试';
+      showError(errorMessage);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -240,7 +281,14 @@ export default function TaskManagementPage() {
             </div>
           </div>
 
-          <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '1rem' }}>发布任务</button>
+          <button 
+            type="submit" 
+            className="btn-primary" 
+            style={{ width: '100%', marginTop: '1rem' }}
+            disabled={submitting}
+          >
+            {submitting ? '发布中...' : '发布任务'}
+          </button>
         </form>
       )}
 
@@ -299,6 +347,7 @@ export default function TaskManagementPage() {
           </div>
         )}
       </div>
+      <ToastContainer />
     </div>
   );
 }

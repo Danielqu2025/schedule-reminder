@@ -2,12 +2,16 @@ import React, { useState, useEffect } from 'react';
 
 import { supabase } from '../lib/supabaseClient';
 import { Schedule } from '../types/database';
+import { useToast } from '../hooks/useToast';
+import { validateLength, validateDateRange } from '../utils/validation';
 import './PersonalSchedulePage.css';
 
 export default function PersonalSchedulePage() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const { showSuccess, showError, ToastContainer } = useToast();
   const [formData, setFormData] = useState({
     title: '',
     date: '',
@@ -38,6 +42,7 @@ export default function PersonalSchedulePage() {
       setSchedules(data || []);
     } catch (error) {
       console.error('加载日程失败:', error);
+      showError('加载日程失败，请刷新页面重试');
     } finally {
       setLoading(false);
     }
@@ -45,11 +50,31 @@ export default function PersonalSchedulePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // 表单验证
+    const titleValidation = validateLength(formData.title, 1, 100, '标题');
+    if (!titleValidation.isValid) {
+      showError(titleValidation.error || '验证失败');
+      return;
+    }
+
+    const descriptionValidation = validateLength(formData.description || '', 0, 500, '描述');
+    if (!descriptionValidation.isValid) {
+      showError(descriptionValidation.error || '验证失败');
+      return;
+    }
+
+    if (submitting) return; // 防止重复提交
+    setSubmitting(true);
+
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        showError('请先登录');
+        return;
+      }
 
       const { error } = await supabase.from('schedules').insert({
         ...formData,
@@ -66,9 +91,14 @@ export default function PersonalSchedulePage() {
         status: 'pending',
       });
       setShowForm(false);
+      showSuccess('日程添加成功！');
       loadSchedules();
-    } catch (error: any) {
-      alert('添加失败: ' + error.message);
+    } catch (error) {
+      console.error('添加日程失败:', error);
+      const errorMessage = error instanceof Error ? error.message : '添加失败，请重试';
+      showError(errorMessage);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -80,21 +110,27 @@ export default function PersonalSchedulePage() {
         .eq('id', id);
 
       if (error) throw error;
+      showSuccess('状态更新成功');
       loadSchedules();
-    } catch (error: any) {
-      alert('更新失败: ' + error.message);
+    } catch (error) {
+      console.error('更新状态失败:', error);
+      const errorMessage = error instanceof Error ? error.message : '更新失败，请重试';
+      showError(errorMessage);
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('确定要删除这个日程吗？')) return;
+    if (!window.confirm('确定要删除这个日程吗？')) return;
 
     try {
       const { error } = await supabase.from('schedules').delete().eq('id', id);
       if (error) throw error;
+      showSuccess('日程删除成功');
       loadSchedules();
-    } catch (error: any) {
-      alert('删除失败: ' + error.message);
+    } catch (error) {
+      console.error('删除日程失败:', error);
+      const errorMessage = error instanceof Error ? error.message : '删除失败，请重试';
+      showError(errorMessage);
     }
   };
 
@@ -182,8 +218,8 @@ export default function PersonalSchedulePage() {
             />
           </div>
 
-          <button type="submit" className="submit-btn">
-            添加日程
+          <button type="submit" className="submit-btn" disabled={submitting}>
+            {submitting ? '添加中...' : '添加日程'}
           </button>
         </form>
       )}
@@ -241,7 +277,7 @@ export default function PersonalSchedulePage() {
           ))
         )}
       </div>
-
+      <ToastContainer />
     </div>
   );
 }

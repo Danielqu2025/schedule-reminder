@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabaseClient';
+import { useToast } from '../../hooks/useToast';
 import './Layout.css';
 
 interface LayoutProps {
@@ -12,16 +13,28 @@ interface LayoutProps {
 export default function Layout({ user }: LayoutProps) {
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const { showSuccess, ToastContainer } = useToast();
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate('/login');
   };
 
-  const copyUUID = () => {
+  const copyUUID = async () => {
     if (user.id) {
-      navigator.clipboard.writeText(user.id);
-      alert('用户 ID 已复制到剪贴板');
+      try {
+        await navigator.clipboard.writeText(user.id);
+        showSuccess('用户 ID 已复制到剪贴板');
+      } catch (error) {
+        // 降级方案：使用传统方法
+        const textArea = document.createElement('textarea');
+        textArea.value = user.id;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showSuccess('用户 ID 已复制到剪贴板');
+      }
     }
   };
 
@@ -99,6 +112,7 @@ export default function Layout({ user }: LayoutProps) {
           <Outlet />
         </div>
       </main>
+      <ToastContainer />
     </div>
   );
 }

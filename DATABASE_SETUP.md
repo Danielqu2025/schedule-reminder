@@ -625,14 +625,38 @@ A: 通过 RLS 策略和完整的权限控制系统确保数据安全。
 
 如果你打算启用团队协作功能，请按照以下步骤操作：
 
-### 步骤一：创建团队版表结构
-在 Supabase SQL Editor 中运行 `docs/sql/TEAM_VERSION_SETUP.sql` 文件的内容。该脚本将创建：
-- `teams` / `team_members` (团队与成员管理)
-- `work_groups` / `work_group_members` (工作组管理)
-- `tasks` / `work_items` (任务与工作子项体系)
-- 对应的索引、约束和 RLS 安全策略。
+### 步骤一：执行完整的团队版数据库脚本
 
-### 步骤二：数据平滑迁移 (可选)
+**重要**：使用项目中的完整 SQL 脚本，它包含所有必要的配置。
+在 Supabase SQL Editor 中运行 `docs/sql/TEAM_VERSION_SETUP.sql` 文件的完整内容。该脚本将创建：
+
+**表结构**（8 个核心表）：
+- `teams` / `team_members` (团队与成员管理)
+- `work_groups` / `work_group_members` (工作组管理) ⭐
+- `tasks` / `work_items` (任务与工作子项体系)
+- `work_item_status_history` (状态历史)
+- `task_comments` (评论)
+
+**完整配置**：
+- ✅ 所有表的完整结构
+- ✅ 索引优化
+- ✅ 数据完整性约束
+- ✅ 自动更新触发器
+- ✅ **完整的 RLS 安全策略**（包括所有表的 SELECT、INSERT、UPDATE、DELETE 策略）
+
+**重要提示**：
+- ✅ 不需要删除 `schedules` 表（个人功能和团队功能可以共存）
+- ✅ SQL 脚本使用 `CREATE TABLE IF NOT EXISTS`，不会覆盖现有表
+- ✅ 脚本包含 `work_group_members` 表的完整 RLS 策略
+
+### 步骤二：验证配置
+
+执行完成后：
+1. 在 Table Editor 中确认所有表已创建
+2. 确认所有表都显示地球图标（🌐），没有 "UNRESTRICTED" 标签
+3. 执行策略查询 SQL 确认所有表都有正确的策略数量
+
+### 步骤三：数据平滑迁移 (可选)
 如果你已经在使用个人版，并希望保留之前的日程数据，请运行 `docs/sql/MIGRATION_EXECUTE.sql`。
 它会自动：
 1. 为每个用户创建一个“个人团队”。

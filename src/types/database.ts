@@ -111,3 +111,16 @@ export interface TaskComment {
   content: string;
   created_at: string;
 }
+
+// 团队邀请
+export interface TeamInvitation {
+  id: number;
+  team_id: number;
+  email: string;
+  invited_by: string;
+  token: string;
+  status: 'pending' | 'accepted' | 'expired' | 'cancelled';
+  expires_at: string;
+  accepted_at?: string;
+  created_at: string;
+}
