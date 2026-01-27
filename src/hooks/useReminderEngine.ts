@@ -137,17 +137,19 @@ export function useReminderEngine(userId: string | undefined) {
     if (!userId) return;
 
     try {
+      const now = new Date();
+      const soon = addMinutes(now, 15);
+
       const { data: workItems, error } = await supabase
         .from('work_items')
-        .select('*')
+        .select('id, title, planned_start_time')
         .eq('assignee_id', userId)
-        .not('status', 'in', '("completed","cancelled")');
+        .not('status', 'in', '("completed","cancelled")')
+        .gte('planned_start_time', now.toISOString())
+        .lte('planned_start_time', soon.toISOString());
 
       if (error) throw error;
       if (!workItems) return;
-
-      const now = new Date();
-      const soon = addMinutes(now, 15);
 
       interface WorkItemData {
         id: number;
@@ -159,19 +161,17 @@ export function useReminderEngine(userId: string | undefined) {
         const cacheId = `workitem-${item.id}`;
         if (!item.planned_start_time || remindedIds.current.has(cacheId)) return;
 
-        const startTime = parseISO(item.planned_start_time);
-        if (isValid(startTime) && isWithinInterval(startTime, { start: now, end: soon })) {
-          showNotification(`🚀 团队任务即将开始: ${item.title}`, {
-            body: `计划开始时间: ${new Date(item.planned_start_time).toLocaleString()}`,
-            tag: cacheId,
-          });
-          saveRemindedIds(cacheId);
-        }
+        showNotification(`🚀 团队任务即将开始: ${item.title}`, {
+          body: `计划开始时间: ${new Date(item.planned_start_time).toLocaleString()}`,
+          tag: cacheId,
+        });
+        saveRemindedIds(cacheId);
       });
     } catch (error) {
       console.error('Check upcoming work items failed:', error);
     }
   }, [userId, showNotification, saveRemindedIds]);
+
 
   // 统一运行器
   const runChecks = useCallback(() => {

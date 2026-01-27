@@ -1,71 +1,42 @@
 # SQL 文件整理总结
 
-## 文件列表
+## 🚀 终极部署方案 (推荐)
 
-### 核心数据库设置文件
+1. **`PROJECT_FLOW_COMPLETE_V2.sql`** ⭐⭐⭐⭐⭐
+   - **用途**：**一键全功能部署脚本 (v2.2.0)**
+   - **内容**：整合了所有表结构、最新 RLS 架构修复（解决递归与权限隔离）、高性能索引以及完善的团队邀请功能。
+   - **优势**：
+     - **一键式**：无需分步执行多个 SQL 文件。
+     - **无死锁**：使用安全定义函数彻底解决了 RLS 递归。
+     - **高性能**：包含针对提醒引擎和工作台优化的复合索引。
+   - **执行方式**：在 Supabase SQL Editor 中直接全选执行。
 
-1. **`TEAM_DATABASE_COMPLETE.sql`** ⭐ 推荐
-   - **用途**：完整数据库设置脚本（全新安装）
-   - **内容**：所有表结构、索引、约束、触发器、RLS 策略
-   - **状态**：已修复所有递归问题，可直接使用
-   - **执行顺序**：第一步
+---
 
-2. **`TEAM_INVITATIONS_SETUP.sql`** ⭐ 推荐
-   - **用途**：团队邀请功能设置
-   - **内容**：`team_invitations` 表、邀请相关函数、RLS 策略
-   - **状态**：已修复栈溢出和列名歧义问题
-   - **执行顺序**：第二步（在 TEAM_DATABASE_COMPLETE.sql 之后）
+## 📂 历史与分步安装文件 (高级/备选)
 
-### 修复文件
+这些文件已整合进 V2 版本，仅在需要进行局部修复或深入了解架构时参考。
 
-3. **`FIX_RLS_RECURSION.sql`**
-   - **用途**：修复 RLS 递归问题
-   - **问题**：`infinite recursion detected in policy for relation "teams"` 或 `"team_members"`
-   - **执行时机**：如果遇到 RLS 递归错误时执行
+### 核心分步文件
+- **`TEAM_DATABASE_COMPLETE.sql`**：基础架构脚本。
+- **`TEAM_INVITATIONS_SETUP.sql`**：独立的邀请功能脚本。
+- **`OPTIMIZED_TEAM_RLS.sql`**：专门的 RLS 权限优化脚本。
+- **`PERFORMANCE_INDEXES.sql`**：专门的性能索引增强脚本。
 
-4. **`FIX_TEAM_INVITATION_FUNCTION_SIMPLE.sql`**
-   - **用途**：修复邀请函数栈溢出问题
-   - **问题**：`stack depth limit exceeded` (错误代码 54001)
-   - **执行时机**：如果遇到栈溢出错误时执行
+### 故障修复
+- **`FIX_TEAM_INVITATION_FUNCTION_SIMPLE.sql`**：专门用于修复旧版邀请函数的栈溢出问题。
+- **`FIX_RLS_RECURSION.sql`**：旧版 RLS 递归修复方案。
 
-### 数据迁移文件
+### 数据迁移
+- **`MIGRATION_EXECUTE.sql`**：从个人日程版 (v1.0) 迁移数据的辅助脚本。
 
-5. **`MIGRATION_EXECUTE.sql`**
-   - **用途**：从个人版迁移到团队版
-   - **内容**：创建默认团队、迁移 schedules 到 tasks
-   - **执行时机**：已有个人日程数据需要迁移时
+---
 
-## 推荐执行顺序
+## 📊 部署统计
+- **核心表数量**：9 个
+- **安全函数**：4 个关键逻辑封装
+- **推荐索引**：12 个核心索引
+- **兼容性**：Supabase PostgreSQL 最新版
 
-### 全新安装
-
-```sql
--- 1. 执行完整数据库设置
--- docs/sql/TEAM_DATABASE_COMPLETE.sql
-
--- 2. 添加邀请功能（可选）
--- docs/sql/TEAM_INVITATIONS_SETUP.sql
-```
-
-### 修复问题
-
-```sql
--- 如果遇到 RLS 递归错误
--- docs/sql/FIX_RLS_RECURSION.sql
-
--- 如果遇到邀请函数栈溢出错误
--- docs/sql/FIX_TEAM_INVITATION_FUNCTION_SIMPLE.sql
-```
-
-## 已删除的文件
-
-以下文件已被删除（功能已整合到主文件中）：
-- ~~`TEAM_VERSION_SETUP.sql`~~ → 已整合到 `TEAM_DATABASE_COMPLETE.sql`
-- ~~`COMPLETE_RLS_POLICIES.sql`~~ → 已整合到 `TEAM_DATABASE_COMPLETE.sql`
-- ~~`FIX_ALL_TEAM_MEMBERS_RLS.sql`~~ → 已整合到 `FIX_RLS_RECURSION.sql`
-- ~~`FIX_TEAM_INVITATION_FUNCTION.sql`~~ → 已整合到 `FIX_TEAM_INVITATION_FUNCTION_SIMPLE.sql`
-- ~~`FIX_TEAM_INVITATION_FUNCTION_FINAL.sql`~~ → 已整合到 `FIX_TEAM_INVITATION_FUNCTION_SIMPLE.sql`
-
-## 文件说明
-
-详细说明请查看：`docs/sql/README.md`
+---
+**最后更新**：2026-01-28
