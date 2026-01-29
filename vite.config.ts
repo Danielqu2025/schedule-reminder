@@ -12,6 +12,7 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    host: '127.0.0.1', // 强制使用 IPv4，确保浏览器可以连接
     open: true,
   },
 })
