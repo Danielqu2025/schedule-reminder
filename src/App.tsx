@@ -128,24 +128,29 @@ function App() {
 
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
+      <div style={{
+        display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center', 
-        alignItems: 'center', 
+        justifyContent: 'center',
+        alignItems: 'center',
         height: '100vh',
-        background: 'var(--bg-main)',
-        gap: '20px'
+        background: 'var(--bg-deep)',
+        gap: '20px',
+        position: 'relative'
       }}>
-        <div className="loading-spinner" style={{ 
-          width: '50px', 
-          height: '50px', 
-          border: '4px solid var(--primary-glow)', 
-          borderTopColor: 'var(--primary)', 
+        <div className="stars"></div>
+        <div className="nebula"></div>
+        <div className="loading-spinner" style={{
+          width: '50px',
+          height: '50px',
+          border: '4px solid rgba(255, 77, 77, 0.2)',
+          borderTopColor: 'var(--coral-bright)',
           borderRadius: '50%',
-          animation: 'spin 1s linear infinite'
+          animation: 'spin 1s linear infinite',
+          position: 'relative',
+          zIndex: 1
         }}></div>
-        <div style={{ color: 'var(--text-muted)', fontWeight: 600 }}>ProjectFlow 正在启动...</div>
+        <div style={{ color: 'var(--text-primary)', fontWeight: 600, position: 'relative', zIndex: 1 }}>ProjectFlow 正在启动...</div>
         <style>{`
           @keyframes spin { to { transform: rotate(360deg); } }
         `}</style>
@@ -155,10 +160,12 @@ function App() {
 
   return (
     <ErrorBoundary>
+      <div className="stars"></div>
+      <div className="nebula"></div>
       <Routes>
-        <Route 
-          path="/login" 
-          element={user ? <Navigate to="/" replace /> : <LoginPage />} 
+        <Route
+          path="/login"
+          element={user ? <Navigate to="/" replace /> : <LoginPage />}
         />
         <Route
           path="/invite/accept"

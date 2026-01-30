@@ -12,8 +12,12 @@
 .header-info h1 {
   font-size: 2.2rem;
   font-weight: 800;
-  color: var(--text-dark);
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, var(--text-primary), var(--coral-bright));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .header-info p {
@@ -28,6 +32,10 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-xl);
 }
 
 .form-grid-premium {
@@ -48,9 +56,9 @@
   gap: 1.5rem;
   margin-bottom: 2.5rem;
   padding: 1.25rem 2rem;
-  background: white;
+  background: var(--bg-elevated);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
   border: 1px solid var(--card-border);
   align-items: center;
 }
@@ -68,8 +76,15 @@
   padding: 0.5rem 1rem;
   border: 1px solid var(--card-border);
   border-radius: var(--radius-sm);
-  background: #f8fafc;
+  background: var(--bg-surface);
+  color: var(--text-primary);
   font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.select-premium:hover {
+  border-color: var(--coral-bright);
 }
 
 /* Tasks Grid */
@@ -87,6 +102,11 @@
   gap: 1.25rem;
   position: relative;
   overflow: hidden;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s;
 }
 
 .task-card-premium::after {
@@ -96,8 +116,14 @@
   left: 0;
   width: 0;
   height: 4px;
-  background: var(--primary);
+  background: linear-gradient(90deg, var(--coral-bright), var(--cyan-bright));
   transition: width 0.3s ease;
+}
+
+.task-card-premium:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-xl), 0 0 30px rgba(255, 77, 77, 0.15);
+  border-color: var(--border-accent);
 }
 
 .task-card-premium:hover::after {
@@ -116,28 +142,65 @@
   padding: 0.2rem 0.6rem;
   border-radius: 4px;
   text-transform: uppercase;
+  backdrop-filter: blur(8px);
+  border: 1px solid;
 }
 
-.priority-high { background: #fee2e2; color: #dc2626; }
-.priority-medium { background: #fef3c7; color: #d97706; }
-.priority-low { background: #f1f5f9; color: #475569; }
+.priority-high {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--danger);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.priority-medium {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--warning);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.priority-low {
+  background: rgba(136, 146, 176, 0.15);
+  color: var(--text-muted);
+  border-color: rgba(136, 146, 176, 0.3);
+}
 
 .status-pill {
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.25rem 0.75rem;
   border-radius: 99px;
+  backdrop-filter: blur(8px);
+  border: 1px solid;
 }
 
-.status-pending { background: #fef3c7; color: #92400e; }
-.status-in_progress { background: #dbeafe; color: #1e40af; }
-.status-completed { background: #dcfce7; color: #166534; }
-.status-cancelled { background: #f1f5f9; color: #475569; }
+.status-pending {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.status-in_progress {
+  background: rgba(0, 229, 204, 0.15);
+  color: #00e5cc;
+  border-color: rgba(0, 229, 204, 0.3);
+}
+
+.status-completed {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+.status-cancelled {
+  background: rgba(136, 146, 176, 0.15);
+  color: #8892b0;
+  border-color: rgba(136, 146, 176, 0.3);
+}
 
 .task-title-premium {
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--text-dark);
+  color: var(--text-primary);
   line-height: 1.4;
 }
 
@@ -163,7 +226,7 @@
 .task-action-hint {
   margin-top: 0.5rem;
   font-size: 0.8rem;
-  color: var(--primary);
+  color: var(--coral-bright);
   font-weight: 700;
   opacity: 0;
   transform: translateX(-10px);
@@ -185,6 +248,9 @@
 .empty-state-tasks {
   text-align: center;
   padding: 6rem;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg);
+  border: 2px dashed var(--card-border);
 }
 
 @media (max-width: 768px) {

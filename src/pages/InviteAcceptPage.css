@@ -3,24 +3,43 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--bg-deep) 0%, var(--bg-surface) 100%);
   padding: 20px;
+  position: relative;
+}
+
+.invite-accept-page::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: radial-gradient(at 20% 20%, rgba(255, 77, 77, 0.08) 0px, transparent 50%);
+  pointer-events: none;
 }
 
 .invite-accept-container {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-xl), 0 0 60px rgba(255, 77, 77, 0.1);
   max-width: 500px;
   width: 100%;
   padding: 40px;
   text-align: center;
+  border: 1px solid var(--card-border);
+  position: relative;
+  z-index: 1;
 }
 
 .invite-header h1 {
   font-size: 2rem;
   margin-bottom: 20px;
-  color: #333;
+  color: var(--text-primary);
+  background: linear-gradient(135deg, var(--text-primary), var(--coral-bright));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .invite-content {
@@ -29,26 +48,27 @@
 
 .invite-message {
   font-size: 1.1rem;
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 30px;
+  line-height: 1.6;
 }
 
 .team-info-card {
-  background: #f9f9f9;
+  background: var(--bg-surface);
   border-radius: 12px;
   padding: 30px;
   margin-bottom: 30px;
-  border: 2px solid #e0e0e0;
+  border: 2px solid var(--card-border);
 }
 
 .team-info-card h2 {
   font-size: 1.5rem;
-  color: #667eea;
+  color: var(--coral-bright);
   margin-bottom: 10px;
 }
 
 .team-info-card p {
-  color: #666;
+  color: var(--text-secondary);
   font-size: 0.95rem;
   line-height: 1.6;
 }
@@ -58,26 +78,59 @@
   padding: 14px 28px;
   font-size: 1.1rem;
   font-weight: 600;
+  background: linear-gradient(135deg, var(--coral-bright), var(--coral-mid));
+  color: var(--bg-deep);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(255, 77, 77, 0.3);
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-large::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-large:hover::before {
+  left: 100%;
+}
+
+.btn-large:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(255, 77, 77, 0.4);
+  filter: brightness(1.15);
 }
 
 .loading-container,
 .error-container {
-  background: white;
+  background: var(--bg-elevated);
   border-radius: 16px;
   padding: 60px 40px;
   text-align: center;
   max-width: 500px;
   width: 100%;
+  border: 1px solid var(--card-border);
+  box-shadow: var(--shadow-xl);
 }
 
 .loading-spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid #f3f3f3;
-  border-top-color: #667eea;
+  border: 4px solid var(--bg-surface);
+  border-top-color: var(--coral-bright);
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 20px;
+  box-shadow: 0 0 20px rgba(255, 77, 77, 0.2);
 }
 
 @keyframes spin {
@@ -85,11 +138,13 @@
 }
 
 .error-container h2 {
-  color: #e74c3c;
+  color: var(--danger);
   margin-bottom: 15px;
+  font-size: 1.5rem;
 }
 
 .error-container p {
-  color: #666;
+  color: var(--text-secondary);
   margin-bottom: 25px;
+  line-height: 1.6;
 }

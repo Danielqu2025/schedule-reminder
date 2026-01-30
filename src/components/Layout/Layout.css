@@ -1,14 +1,14 @@
 .layout {
   display: flex;
   min-height: 100vh;
-  background-color: var(--bg-main);
+  background-color: var(--bg-deep);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Sidebar Styling */
 .layout-sidebar {
   width: 280px;
-  background-color: var(--bg-side);
+  background: linear-gradient(180deg, var(--bg-surface) 0%, var(--bg-deep) 100%);
   border-right: 1px solid var(--card-border);
   display: flex;
   flex-direction: column;
@@ -17,6 +17,8 @@
   top: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 50;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .sidebar-closed .layout-sidebar {
@@ -37,18 +39,40 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--primary), var(--accent));
+  background: linear-gradient(135deg, var(--coral-bright), var(--coral-mid));
   border-radius: var(--radius-md);
-  box-shadow: 0 4px 6px -1px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px -2px rgba(255, 77, 77, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.brand-logo::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  animation: shine 3s infinite;
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) rotate(45deg); }
 }
 
 .brand-name {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--text-dark);
+  color: var(--text-primary);
   white-space: nowrap;
   opacity: 1;
   transition: opacity 0.2s;
+  background: linear-gradient(135deg, var(--text-primary), var(--coral-bright));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .sidebar-closed .brand-name {
@@ -92,18 +116,39 @@
   color: var(--text-main);
   text-decoration: none;
   font-weight: 500;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin-bottom: 0.25rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.nav-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 3px;
+  background: var(--coral-bright);
+  transform: scaleY(0);
+  transition: transform 0.3s;
+  border-radius: 0 2px 2px 0;
 }
 
 .nav-item:hover {
-  background-color: #f1f5f9;
-  color: var(--primary);
+  background: rgba(255, 77, 77, 0.08);
+  color: var(--text-primary);
+  transform: translateX(4px);
 }
 
 .nav-item.active {
-  background-color: var(--primary-glow);
-  color: var(--primary);
+  background: rgba(255, 77, 77, 0.12);
+  color: var(--coral-bright);
+  transform: translateX(4px);
+}
+
+.nav-item.active::before {
+  transform: scaleY(1);
 }
 
 .nav-icon {
@@ -129,6 +174,7 @@
 .sidebar-footer {
   padding: 1.5rem 1rem;
   border-top: 1px solid var(--card-border);
+  background: rgba(255, 77, 77, 0.02);
 }
 
 .user-profile {
@@ -141,14 +187,31 @@
 .user-avatar {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, var(--secondary), #f472b6);
+  background: linear-gradient(135deg, var(--coral-bright), var(--coral-mid));
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--bg-deep);
   font-weight: 600;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(255, 77, 77, 0.3);
+  position: relative;
+}
+
+.user-avatar::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--coral-bright), var(--cyan-bright));
+  z-index: -1;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.05); }
 }
 
 .user-info {
@@ -164,7 +227,7 @@
 .user-email-text {
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text-dark);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -173,6 +236,23 @@
 .user-status {
   font-size: 0.75rem;
   color: var(--success);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.user-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--success);
+  border-radius: 50%;
+  animation: blink 2s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
 .sign-out-link {
@@ -188,12 +268,13 @@
   font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s;
 }
 
 .sign-out-link:hover {
-  background-color: #fef2f2;
-  border-color: #fecaca;
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  transform: translateY(-1px);
 }
 
 .sidebar-closed .sign-out-link span:last-child {
@@ -210,9 +291,9 @@
 
 .main-header {
   height: 64px;
-  background-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(5, 8, 16, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid var(--card-border);
   display: flex;
   align-items: center;
@@ -234,11 +315,12 @@
   align-items: center;
   justify-content: center;
   margin-right: 1.5rem;
+  transition: all 0.3s;
 }
 
 .sidebar-toggle:hover {
-  background-color: #f1f5f9;
-  color: var(--text-dark);
+  background: rgba(255, 77, 77, 0.1);
+  color: var(--coral-bright);
 }
 
 .header-breadcrumbs {
@@ -248,8 +330,8 @@
 }
 
 .current-page {
-  color: var(--text-dark);
-  font-weight: 500;
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 .header-notifications {
@@ -264,11 +346,13 @@
   padding: 0.5rem;
   cursor: pointer;
   border-radius: var(--radius-sm);
-  transition: background 0.2s;
+  transition: all 0.3s;
+  color: var(--text-muted);
 }
 
 .icon-btn:hover {
-  background-color: #f1f5f9;
+  background: rgba(255, 77, 77, 0.1);
+  color: var(--coral-bright);
 }
 
 .content-area {
@@ -276,6 +360,8 @@
   max-width: 1400px;
   width: 100%;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
 @media (max-width: 768px) {

@@ -31,7 +31,7 @@
 ### 重要：针对 v2.2.0 之前的版本升级
 
 如果您从旧版本升级，或者遇到 "Infinite recursion detected" 错误：
-- ✅ **唯一方案**：执行 [`docs/sql/PROJECT_FLOW_COMPLETE_V2.sql`](../docs/sql/PROJECT_FLOW_COMPLETE_V2.sql)。
+- ✅ **唯一方案**：执行 [`docs/sql/FULL_DATABASE_SETUP.sql`](../docs/sql/FULL_DATABASE_SETUP.sql)。
 - **改进点**：新架构不再依赖 RLS 内部的子查询（导致递归的主因），而是使用 `SECURITY DEFINER` 安全函数（如 `is_team_member`）进行跨表身份校验。
 
 ### 步骤 2：检查 RLS 策略数量
@@ -89,17 +89,17 @@ ORDER BY tablename;
 ## 🔍 故障排除 (FAQ)
 
 ### Q: 看到 "UNRESTRICTED" 标签怎么办？
-**答**：这表示该表处于“裸奔”状态。请立即执行 `PROJECT_FLOW_COMPLETE_V2.sql` 以应用最新的 RLS 策略。
+**答**：这表示该表处于“裸奔”状态。请立即执行 `FULL_DATABASE_SETUP.sql` 以应用最新的 RLS 策略。
 
 ### Q: 仍然报错 "stack depth limit exceeded"？
-**答**：确认您是否运行了旧版的 `create_team_invitation` 函数。请重新执行 V2.2.0 脚本以覆盖旧函数。
+**答**：确认您是否运行了旧版的 `create_team_invitation` 函数。请重新执行 v2.3.0 脚本以覆盖旧函数。
 
 ### Q: 如何彻底重置数据库？
 **警告**：这会删除所有数据。
 ```sql
 DROP SCHEMA public CASCADE;
 CREATE SCHEMA public;
--- 然后重新执行 PROJECT_FLOW_COMPLETE_V2.sql
+-- 然后重新执行 FULL_DATABASE_SETUP.sql
 ```
 
 ---
