@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Layers, Clock, AlertCircle, Plus } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { Task, Team, WorkGroup } from '../types/database';
 import { useToast } from '../hooks/useToast';
@@ -338,10 +339,16 @@ export default function TaskManagementPage() {
                 </div>
                 <h3 className="task-title-premium">{task.title}</h3>
                 <div className="task-info-footer">
-                  <div className="info-tag">🏢 {teams.find(t => t.id === task.team_id)?.name || '未知团队'}</div>
-                  {task.end_date && <div className="info-tag danger">⏰ {task.end_date} 截止</div>}
+                  <div className="info-tag" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <Layers size={14} /> {teams.find(t => t.id === task.team_id)?.name || '未知团队'}
+                  </div>
+                  {task.end_date && (
+                    <div className="info-tag danger" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                      <Clock size={14} /> {task.end_date} 截止
+                    </div>
+                  )}
                 </div>
-                <div className="task-action-hint">查看 WBS 分解 ❯</div>
+                <div className="task-action-hint">查看 WBS 分解</div>
               </div>
             ))}
           </div>

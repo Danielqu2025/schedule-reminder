@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { BarChart3, Circle, CheckCircle2, XCircle } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { Schedule, Task, WorkItem } from '../types/database';
 import { 
@@ -239,7 +240,7 @@ export default function StatisticsPage() {
   return (
     <div className="statistics-page">
       <div className="page-header">
-        <h2>📊 统计分析</h2>
+        <h2>统计分析</h2>
         <div className="stats-tabs">
           <button 
             className={`tab-btn ${activeTab === 'personal' ? 'active' : ''}`}
@@ -294,19 +295,27 @@ export default function StatisticsPage() {
               <div className="label">所选时段内</div>
             </div>
             <div className="stats-card" style={{ borderBottom: '4px solid #ffd700' }}>
-              <h4>📋 待办</h4>
+              <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                <Circle size={16} /> 待办
+              </h4>
               <div className="count">{personalStats.pending}</div>
             </div>
             <div className="stats-card" style={{ borderBottom: '4px solid #3498db' }}>
-              <h4>🔄 进行中</h4>
+              <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                <BarChart3 size={16} /> 进行中
+              </h4>
               <div className="count">{personalStats.in_progress}</div>
             </div>
             <div className="stats-card" style={{ borderBottom: '4px solid #2ecc71' }}>
-              <h4>✅ 已完成</h4>
+              <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                <CheckCircle2 size={16} /> 已完成
+              </h4>
               <div className="count">{personalStats.completed}</div>
             </div>
             <div className="stats-card" style={{ borderBottom: '4px solid #e74c3c' }}>
-              <h4>❌ 已取消</h4>
+              <h4 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                <XCircle size={16} /> 已取消
+              </h4>
               <div className="count">{personalStats.cancelled}</div>
             </div>
           </div>

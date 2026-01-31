@@ -1,5 +1,17 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { 
+  Hexagon, 
+  CalendarClock, 
+  Layers, 
+  ListChecks, 
+  Network, 
+  BarChart3, 
+  LogOut, 
+  Bell,
+  PanelLeftClose,
+  PanelLeftOpen
+} from 'lucide-react';
 
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabaseClient';
@@ -42,7 +54,9 @@ export default function Layout({ user }: LayoutProps) {
     <div className={`layout ${isSidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
       <aside className="layout-sidebar">
         <div className="sidebar-brand">
-          <div className="brand-logo">📅</div>
+          <div className="brand-logo">
+            <Hexagon size={20} strokeWidth={2.5} />
+          </div>
           <h1 className="brand-name">ProjectFlow</h1>
         </div>
         
@@ -50,7 +64,9 @@ export default function Layout({ user }: LayoutProps) {
           <div className="nav-group">
             <span className="nav-label">个人</span>
             <NavLink to="/" end className="nav-item">
-              <span className="nav-icon">🗓️</span>
+              <span className="nav-icon">
+                <CalendarClock size={20} strokeWidth={2} />
+              </span>
               <span className="nav-text">个人日程</span>
             </NavLink>
           </div>
@@ -58,15 +74,21 @@ export default function Layout({ user }: LayoutProps) {
           <div className="nav-group">
             <span className="nav-label">团队协作</span>
             <NavLink to="/teams" className="nav-item">
-              <span className="nav-icon">🏢</span>
+              <span className="nav-icon">
+                <Layers size={20} strokeWidth={2} />
+              </span>
               <span className="nav-text">团队概览</span>
             </NavLink>
             <NavLink to="/tasks" className="nav-item">
-              <span className="nav-icon">📋</span>
+              <span className="nav-icon">
+                <ListChecks size={20} strokeWidth={2} />
+              </span>
               <span className="nav-text">任务管理</span>
             </NavLink>
             <NavLink to="/work-items" className="nav-item">
-              <span className="nav-icon">🧱</span>
+              <span className="nav-icon">
+                <Network size={20} strokeWidth={2} />
+              </span>
               <span className="nav-text">工作分解</span>
             </NavLink>
           </div>
@@ -74,7 +96,9 @@ export default function Layout({ user }: LayoutProps) {
           <div className="nav-group">
             <span className="nav-label">分析</span>
             <NavLink to="/statistics" className="nav-item">
-              <span className="nav-icon">📊</span>
+              <span className="nav-icon">
+                <BarChart3 size={20} strokeWidth={2} />
+              </span>
               <span className="nav-text">统计报告</span>
             </NavLink>
           </div>
@@ -91,7 +115,8 @@ export default function Layout({ user }: LayoutProps) {
             </div>
           </div>
           <button onClick={handleSignOut} className="sign-out-link">
-            <span>🚪</span> 退出登录
+            <LogOut size={16} strokeWidth={2} />
+            <span>退出登录</span>
           </button>
         </div>
       </aside>
@@ -99,13 +124,15 @@ export default function Layout({ user }: LayoutProps) {
       <main className="layout-main">
         <header className="main-header">
           <button className="sidebar-toggle" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-            {isSidebarOpen ? '❮' : '❯'}
+            {isSidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
           </button>
           <div className="header-breadcrumbs">
             <span>首页</span> / <span className="current-page">当前页面</span>
           </div>
           <div className="header-notifications">
-            <button className="icon-btn">🔔</button>
+            <button className="icon-btn">
+              <Bell size={18} />
+            </button>
           </div>
         </header>
         <div className="content-area">

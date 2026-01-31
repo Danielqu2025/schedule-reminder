@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Plus, Users, Calendar, ChevronRight, Layers } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { Team } from '../types/database';
 import { useToast } from '../hooks/useToast';
@@ -154,7 +155,8 @@ export default function TeamOverviewPage() {
       <div className="page-header">
         <h2>团队概览</h2>
         <button onClick={() => setShowForm(!showForm)} className="add-btn">
-          {showForm ? '取消' : '+ 创建团队'}
+          <Plus size={18} />
+          <span>{showForm ? '取消' : '创建团队'}</span>
         </button>
       </div>
 
@@ -190,7 +192,9 @@ export default function TeamOverviewPage() {
       <div className="teams-grid">
         {teams.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">🏢</div>
+            <div className="empty-icon">
+              <Layers size={48} strokeWidth={1.5} />
+            </div>
             <p>您还没有加入任何团队</p>
             <p style={{ fontSize: '0.9rem', marginTop: '10px', color: 'var(--text-muted)' }}>点击右上角按钮创建一个吧！</p>
           </div>
@@ -208,10 +212,12 @@ export default function TeamOverviewPage() {
               <p>{team.description || '暂无团队描述...'}</p>
               <div className="team-footer">
                 <div className="team-meta-item">
-                  <span>📅</span>
+                  <Calendar size={14} />
                   <span>{new Date(team.created_at).toLocaleDateString()}</span>
                 </div>
-                <button className="view-team-btn">进入团队 ❯</button>
+                <button className="view-team-btn">
+                  进入团队 <ChevronRight size={14} />
+                </button>
               </div>
             </div>
           ))

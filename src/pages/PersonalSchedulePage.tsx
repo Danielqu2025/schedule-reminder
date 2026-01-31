@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Plus, Trash2, CalendarDays, Clock, FileText, CheckCircle2, XCircle, Circle } from 'lucide-react';
 
 import { supabase } from '../lib/supabaseClient';
 import { Schedule } from '../types/database';
@@ -136,12 +137,22 @@ export default function PersonalSchedulePage() {
 
   const getStatusLabel = (status: Schedule['status']) => {
     const labels = {
-      pending: '📋 待办',
-      in_progress: '🔄 进行中',
-      completed: '✅ 已完成',
-      cancelled: '❌ 已取消',
+      pending: '待办',
+      in_progress: '进行中',
+      completed: '已完成',
+      cancelled: '已取消',
     };
     return labels[status];
+  };
+
+  const getStatusIcon = (status: Schedule['status']) => {
+    const icons = {
+      pending: <Circle size={14} />,
+      in_progress: <Clock size={14} />,
+      completed: <CheckCircle2 size={14} />,
+      cancelled: <XCircle size={14} />,
+    };
+    return icons[status];
   };
 
   if (loading) {
@@ -153,7 +164,8 @@ export default function PersonalSchedulePage() {
       <div className="page-header">
         <h2>个人日程管理</h2>
         <button onClick={() => setShowForm(!showForm)} className="add-btn">
-          {showForm ? '取消' : '+ 添加日程'}
+          {showForm ? <XCircle size={18} /> : <Plus size={18} />}
+          <span>{showForm ? '取消' : '添加日程'}</span>
         </button>
       </div>
 
@@ -178,10 +190,10 @@ export default function PersonalSchedulePage() {
                   setFormData({ ...formData, status: e.target.value as Schedule['status'] })
                 }
               >
-                <option value="pending">📋 待办</option>
-                <option value="in_progress">🔄 进行中</option>
-                <option value="completed">✅ 已完成</option>
-                <option value="cancelled">❌ 已取消</option>
+                <option value="pending">待办</option>
+                <option value="in_progress">进行中</option>
+                <option value="completed">已完成</option>
+                <option value="cancelled">已取消</option>
               </select>
             </div>
           </div>
@@ -227,7 +239,9 @@ export default function PersonalSchedulePage() {
       <div className="schedules-grid">
         {schedules.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">📅</div>
+            <div className="empty-icon">
+              <CalendarDays size={48} strokeWidth={1.5} />
+            </div>
             <p>暂无日程安排，点击上方按钮开始记录</p>
           </div>
         ) : (
@@ -236,13 +250,16 @@ export default function PersonalSchedulePage() {
               <div className="schedule-header">
                 <h3>{schedule.title}</h3>
                 <span className={`status-badge status-${schedule.status}`}>
-                  {getStatusLabel(schedule.status)}
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                    {getStatusIcon(schedule.status)}
+                    {getStatusLabel(schedule.status)}
+                  </span>
                 </span>
               </div>
               
               <div className="schedule-info">
                 <div className="info-row">
-                  <span className="info-icon">🕒</span>
+                  <Clock size={14} />
                   <span>{schedule.date} {schedule.time}</span>
                 </div>
                 {schedule.description && (
@@ -260,17 +277,17 @@ export default function PersonalSchedulePage() {
                   }
                   className="status-select-premium"
                 >
-                  <option value="pending">📋 待办</option>
-                  <option value="in_progress">🔄 进行中</option>
-                  <option value="completed">✅ 已完成</option>
-                  <option value="cancelled">❌ 已取消</option>
+                  <option value="pending">待办</option>
+                  <option value="in_progress">进行中</option>
+                  <option value="completed">已完成</option>
+                  <option value="cancelled">已取消</option>
                 </select>
                 <button
                   onClick={() => handleDelete(schedule.id)}
                   className="btn-delete-icon"
                   title="删除日程"
                 >
-                  🗑️
+                  <Trash2 size={18} strokeWidth={2} />
                 </button>
               </div>
             </div>

@@ -3,148 +3,105 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--bg-deep) 0%, var(--bg-surface) 100%);
+  background-color: var(--bg-primary);
   padding: 20px;
   position: relative;
+  overflow: hidden;
 }
 
+/* 科技背景 */
 .invite-accept-page::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: radial-gradient(at 20% 20%, rgba(255, 77, 77, 0.08) 0px, transparent 50%);
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 30% 40%, rgba(74, 158, 255, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 70% 60%, rgba(0, 212, 255, 0.03) 0%, transparent 50%);
   pointer-events: none;
 }
 
 .invite-accept-container {
-  background: var(--bg-elevated);
-  border-radius: 16px;
-  box-shadow: var(--shadow-xl), 0 0 60px rgba(255, 77, 77, 0.1);
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   max-width: 500px;
   width: 100%;
-  padding: 40px;
+  padding: 2.5rem;
   text-align: center;
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--border-subtle);
   position: relative;
   z-index: 1;
 }
 
-.invite-header h1 {
-  font-size: 2rem;
-  margin-bottom: 20px;
-  color: var(--text-primary);
-  background: linear-gradient(135deg, var(--text-primary), var(--coral-bright));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.invite-content {
-  margin-top: 30px;
-}
-
-.invite-message {
-  font-size: 1.1rem;
-  color: var(--text-secondary);
-  margin-bottom: 30px;
-  line-height: 1.6;
-}
-
-.team-info-card {
-  background: var(--bg-surface);
-  border-radius: 12px;
-  padding: 30px;
-  margin-bottom: 30px;
-  border: 2px solid var(--card-border);
-}
-
-.team-info-card h2 {
-  font-size: 1.5rem;
-  color: var(--coral-bright);
-  margin-bottom: 10px;
-}
-
-.team-info-card p {
-  color: var(--text-secondary);
-  font-size: 0.95rem;
-  line-height: 1.6;
-}
-
-.btn-large {
-  width: 100%;
-  padding: 14px 28px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  background: linear-gradient(135deg, var(--coral-bright), var(--coral-mid));
-  color: var(--bg-deep);
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(255, 77, 77, 0.3);
-  transition: all 0.3s;
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-large::before {
+.invite-accept-container::before {
   content: '';
   position: absolute;
   top: 0;
-  left: -100%;
+  left: 0;
   width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-orange), transparent);
 }
 
-.btn-large:hover::before {
-  left: 100%;
+.invite-header h1 {
+  font-size: 1.75rem;
+  margin-bottom: 1.25rem;
+  color: var(--text-primary);
+  font-family: 'Ibarra Real Nova', serif;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.invite-header h1::before {
+  content: '◆';
+  color: var(--accent-orange);
+  font-size: 1.25rem;
+}
+
+.team-info-card {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  padding: 1.5rem;
+  border-radius: var(--radius-md);
+  margin: 1.5rem 0;
+}
+
+/* 白色按钮 */
+.btn-large {
+  background-color: #ffffff;
+  color: #1a1a1a;
+  padding: 0.9rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
 }
 
 .btn-large:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(255, 77, 77, 0.4);
-  filter: brightness(1.15);
-}
-
-.loading-container,
-.error-container {
-  background: var(--bg-elevated);
-  border-radius: 16px;
-  padding: 60px 40px;
-  text-align: center;
-  max-width: 500px;
-  width: 100%;
-  border: 1px solid var(--card-border);
-  box-shadow: var(--shadow-xl);
+  background-color: #f0f0f0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
 }
 
 .loading-spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid var(--bg-surface);
-  border-top-color: var(--coral-bright);
+  border: 3px solid var(--bg-elevated);
+  border-top-color: var(--accent-orange);
   border-radius: 50%;
+  width: 40px;
+  height: 40px;
   animation: spin 1s linear infinite;
-  margin: 0 auto 20px;
-  box-shadow: 0 0 20px rgba(255, 77, 77, 0.2);
+  margin: 2rem auto;
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
-}
-
-.error-container h2 {
-  color: var(--danger);
-  margin-bottom: 15px;
-  font-size: 1.5rem;
-}
-
-.error-container p {
-  color: var(--text-secondary);
-  margin-bottom: 25px;
-  line-height: 1.6;
 }

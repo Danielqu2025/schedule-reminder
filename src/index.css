@@ -1,43 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Ibarra+Real+Nova:ital,wght@0,400..700;1,400..700&family=Inter:wght@100..900&display=swap');
+
 :root {
-  --bg-deep: #050810;
-  --bg-surface: #0a0f1a;
-  --bg-elevated: #111827;
-  --coral-bright: #ff4d4d;
-  --coral-mid: #e63946;
-  --coral-dark: #991b1b;
-  --cyan-bright: #00e5cc;
-  --cyan-mid: #14b8a6;
-  --cyan-glow: rgba(0, 229, 204, 0.4);
-  --text-primary: #f0f4ff;
-  --text-secondary: #8892b0;
-  --text-muted: #5a6480;
-  --border-subtle: rgba(136, 146, 176, 0.15);
-  --border-accent: rgba(255, 77, 77, 0.3);
-  --primary: #ff4d4d;
-  --primary-dark: #e63946;
-  --primary-light: #ff6b6b;
-  --primary-glow: rgba(255, 77, 77, 0.3);
-  --secondary: #14b8a6;
-  --accent: #00e5cc;
-  --success: #00e5cc;
-  --warning: #fbbf24;
-  --danger: #ef4444;
-  --bg-main: #050810;
-  --bg-side: #0a0f1a;
-  --card-bg: #111827;
-  --card-border: rgba(136, 146, 176, 0.15);
-  --text-dark: #f0f4ff;
-  --text-main: #c4d1eb;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  /* Claude.ai Dark Theme Colors */
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --bg-elevated: #3a3a3a;
+  --bg-hover: #454545;
+  
+  --text-primary: #e8e8e8;
+  --text-secondary: #b4b4b4;
+  --text-muted: #8a8a8a;
+  
+  /* 橙色主要用于图标和小元素 */
+  --accent-orange: #d97757;
+  --accent-orange-dark: #c96843;
+  --accent-orange-light: #e89575;
+  --accent-glow: rgba(217, 119, 87, 0.15);
+  
+  --border-subtle: #404040;
+  --border-medium: #4a4a4a;
+  
+  --success: #6b9f5f;
+  --warning: #d9a44e;
+  --danger: #d46b6b;
+  --info: #5f9fb4;
+  
+  /* 新材料科技主题色 */
+  --tech-blue: #4a9eff;
+  --tech-cyan: #00d4ff;
+  --tech-purple: #9d6fff;
+  
+  /* Semantic aliases */
+  --primary: var(--accent-orange);
+  --primary-dark: var(--accent-orange-dark);
+  --primary-light: var(--accent-orange-light);
+  --primary-glow: var(--accent-glow);
+  
+  --bg-main: var(--bg-primary);
+  --bg-side: var(--bg-secondary);
+  --card-bg: var(--bg-secondary);
+  --card-border: var(--border-subtle);
+  --text-dark: var(--text-primary);
+  --text-main: var(--text-secondary);
+  
+  /* Spacing */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  
+  /* Shadows - subtle for dark theme */
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
-  --glass-bg: rgba(17, 24, 39, 0.7);
-  --glass-border: rgba(136, 146, 176, 0.2);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
 }
 
 * {
@@ -47,59 +63,19 @@
 }
 
 body {
-  font-family: 'Satoshi', 'Clash Display', system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--bg-deep);
-  background-image: radial-gradient(at 0% 0%, rgba(255, 77, 77, 0.08) 0px, transparent 50%),
-                    radial-gradient(at 100% 100%, rgba(0, 229, 204, 0.05) 0px, transparent 50%);
+  background-color: var(--bg-primary);
   color: var(--text-primary);
-  line-height: 1.6;
+  line-height: 1.5;
   min-height: 100vh;
 }
 
-/* Star Background Effect */
-.stars {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: -1;
-  background-image: 
-    radial-gradient(2px 2px at 20px 30px, rgba(255, 255, 255, 0.3), transparent),
-    radial-gradient(2px 2px at 40px 70px, rgba(255, 255, 255, 0.2), transparent),
-    radial-gradient(1px 1px at 90px 40px, rgba(255, 255, 255, 0.3), transparent),
-    radial-gradient(2px 2px at 160px 120px, rgba(255, 255, 255, 0.2), transparent),
-    radial-gradient(1px 1px at 230px 80px, rgba(255, 255, 255, 0.3), transparent),
-    radial-gradient(2px 2px at 300px 150px, rgba(255, 255, 255, 0.2), transparent),
-    radial-gradient(1px 1px at 400px 60px, rgba(255, 255, 255, 0.4), transparent),
-    radial-gradient(2px 2px at 500px 200px, rgba(255, 255, 255, 0.2), transparent),
-    radial-gradient(1px 1px at 600px 100px, rgba(255, 77, 77, 0.3), transparent),
-    radial-gradient(2px 2px at 700px 180px, rgba(0, 229, 204, 0.2), transparent);
-  background-size: 800px 300px;
-  animation: twinkle 60s linear infinite;
-}
-
-@keyframes twinkle {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(-300px); }
-}
-
-/* Nebula Background Effect */
-.nebula {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: -1;
-  background: 
-    radial-gradient(ellipse at 20% 20%, rgba(255, 77, 77, 0.1) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 80%, rgba(0, 229, 204, 0.08) 0%, transparent 50%);
-  filter: blur(60px);
+h1, h2, h3, h4, .serif-font {
+  font-family: 'Ibarra Real Nova', serif;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 /* Scrollbar Styling */
@@ -109,16 +85,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-surface);
+  background: var(--bg-secondary);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(136, 146, 176, 0.3);
-  border-radius: 4px;
+  background: var(--bg-elevated);
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(136, 146, 176, 0.5);
+  background: var(--bg-hover);
 }
 
 /* Premium Component Styles */
@@ -128,61 +104,36 @@ body {
   border-radius: var(--radius-md);
   padding: 1.5rem;
   box-shadow: var(--shadow-sm);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
 }
 
 .card:hover {
-  box-shadow: var(--shadow-lg), 0 0 20px rgba(255, 77, 77, 0.1);
-  transform: translateY(-2px);
-  border-color: var(--border-accent);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-medium);
 }
 
-.glass-card {
-  background: var(--glass-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
-}
-
+/* Claude.ai 风格：白色按钮 + 深色文字 */
 .btn-primary {
-  background: linear-gradient(135deg, var(--coral-bright), var(--coral-mid));
-  color: var(--bg-deep);
+  background: #ffffff;
+  color: #1a1a1a;
   border: none;
-  padding: 0.75rem 1.5rem;
+  padding: 0.7rem 1.4rem;
   border-radius: var(--radius-md);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  box-shadow: 0 4px 12px -2px rgba(255, 77, 77, 0.4);
-  position: relative;
-  overflow: hidden;
-}
-
-.btn-primary::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: left 0.5s;
-}
-
-.btn-primary:hover::before {
-  left: 100%;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
 }
 
 .btn-primary:hover {
-  filter: brightness(1.15);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px -4px rgba(255, 77, 77, 0.5);
+  background: #f0f0f0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.15);
 }
 
 .btn-primary:active {
@@ -193,29 +144,29 @@ body {
   background: var(--bg-elevated);
   color: var(--text-primary);
   border: 1px solid var(--border-subtle);
-  padding: 0.75rem 1.5rem;
+  padding: 0.7rem 1.4rem;
   border-radius: var(--radius-md);
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  font-size: 0.95rem;
 }
 
 .btn-secondary:hover {
-  background: var(--border-subtle);
-  border-color: var(--cyan-mid);
-  color: var(--cyan-bright);
+  background: var(--bg-hover);
+  border-color: var(--border-medium);
 }
 
 .input-field {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1px solid var(--card-border);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
-  background-color: var(--bg-surface);
+  background-color: var(--bg-elevated);
   color: var(--text-primary);
   transition: all 0.2s;
   font-size: 0.95rem;
@@ -227,12 +178,12 @@ body {
 
 .input-field:focus {
   outline: none;
-  border-color: var(--coral-bright);
-  background-color: var(--bg-elevated);
-  box-shadow: 0 0 0 3px rgba(255, 77, 77, 0.2);
+  border-color: var(--text-secondary);
+  background-color: var(--bg-secondary);
+  box-shadow: 0 0 0 3px rgba(180, 180, 180, 0.1);
 }
 
-/* Status Badges */
+/* Status Badges - 橙色用于图标式徽章 */
 .badge {
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
@@ -240,38 +191,64 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.025em;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
 }
 
 .badge-pending {
-  background: rgba(251, 191, 36, 0.2);
-  color: #fbbf24;
-  border: 1px solid rgba(251, 191, 36, 0.3);
+  background: rgba(217, 164, 78, 0.15);
+  color: #d9a44e;
+  border: 1px solid rgba(217, 164, 78, 0.3);
 }
 
 .badge-in_progress {
-  background: rgba(0, 229, 204, 0.15);
-  color: #00e5cc;
-  border: 1px solid rgba(0, 229, 204, 0.3);
+  background: rgba(217, 119, 87, 0.15);
+  color: #e89575;
+  border: 1px solid rgba(217, 119, 87, 0.3);
 }
 
 .badge-completed {
-  background: rgba(52, 211, 153, 0.15);
-  color: #34d399;
-  border: 1px solid rgba(52, 211, 153, 0.3);
+  background: rgba(107, 159, 95, 0.15);
+  color: #6b9f5f;
+  border: 1px solid rgba(107, 159, 95, 0.3);
 }
 
 .badge-cancelled {
-  background: rgba(136, 146, 176, 0.15);
-  color: #8892b0;
-  border: 1px solid rgba(136, 146, 176, 0.3);
+  background: rgba(138, 138, 138, 0.15);
+  color: #8a8a8a;
+  border: 1px solid rgba(138, 138, 138, 0.3);
 }
 
 .badge-blocked {
-  background: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: rgba(212, 107, 107, 0.15);
+  color: #d46b6b;
+  border: 1px solid rgba(212, 107, 107, 0.3);
+}
+
+/* 科技元素装饰 */
+.tech-accent {
+  position: relative;
+}
+
+.tech-accent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--tech-cyan), var(--tech-blue));
+  border-radius: 2px;
+}
+
+.tech-glow {
+  box-shadow: 0 0 20px rgba(74, 158, 255, 0.1);
+}
+
+/* 材料科技网格背景 */
+.material-grid-bg {
+  background-image: 
+    linear-gradient(rgba(74, 158, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(74, 158, 255, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
 }
 
 /* Global Animations */
@@ -283,6 +260,16 @@ body {
 @keyframes slideInRight {
   from { opacity: 0; transform: translateX(20px); }
   to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .fade-in {
@@ -298,4 +285,3 @@ body {
   display: flex;
   flex-direction: column;
 }
-
