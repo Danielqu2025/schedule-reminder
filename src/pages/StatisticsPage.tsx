@@ -110,7 +110,7 @@ export default function StatisticsPage() {
 
     // --- Personal Stats Calculation ---
     const filteredSchedules = schedules.filter(s => {
-      const sDate = new Date(s.date);
+      const sDate = new Date(s.start_date);
       return isWithinInterval(sDate, { start, end });
     });
 

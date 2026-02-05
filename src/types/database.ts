@@ -10,11 +10,38 @@ export interface Schedule {
   id: number;
   user_id: string;
   title: string;
-  date: string;
-  time: string;
+  start_date: string; // 计划启动日期
+  end_date?: string;  // 计划完成日期（可选）
   description?: string;
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  priority: 'urgent' | 'high' | 'medium' | 'low'; // 优先级
+  reminder_time?: string; // 提醒时间
+  reminder_type?: 'email' | 'sms' | 'app'; // 提醒类型
+  completion_notes?: string; // 完成备注
+  deleted_at?: string; // 软删除时间
   created_at: string;
+}
+
+// 日程更新记录
+export interface ScheduleUpdate {
+  id: number;
+  schedule_id: number;
+  user_id: string;
+  content: string;
+  status?: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  created_at: string;
+  schedule_attachments?: ScheduleAttachment[];
+}
+
+// 日程附件
+export interface ScheduleAttachment {
+  id: number;
+  update_id: number;
+  file_name: string;
+  file_path: string;
+  file_type?: string;
+  file_size?: number;
+  uploaded_at: string;
 }
 
 // 团队版本 - Team
@@ -64,9 +91,12 @@ export interface Task {
   end_date?: string;
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
   priority: 'low' | 'medium' | 'high';
+  estimated_hours?: number; // 新增：预估工时
+  actual_hours?: number; // 新增：实际工时
   created_by: string;
   created_at: string;
   updated_at: string;
+  deleted_at?: string; // 新增：软删除时间
 }
 
 // 工作子项
@@ -82,6 +112,7 @@ export interface WorkItem {
   planned_end_time?: string;
   assignee_id?: string;
   collaborators?: string; // JSON数组
+  blocked_reason?: string; // 新增：阻塞原因
   objectives?: string;
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'blocked';
   progress: number; // 0-100
@@ -123,4 +154,61 @@ export interface TeamInvitation {
   expires_at: string;
   accepted_at?: string;
   created_at: string;
+}
+
+// ========== 新增类型 ==========
+
+// 日程标签
+export interface ScheduleTag {
+  id: number;
+  schedule_id: number;
+  tag_name: string;
+  created_at: string;
+}
+
+// 任务附件
+export interface TaskAttachment {
+  id: number;
+  task_id: number;
+  file_name: string;
+  file_path: string;
+  file_type?: string;
+  file_size?: number;
+  uploaded_at: string;
+  uploaded_by?: string;
+}
+
+// 任务依赖关系
+export interface TaskDependency {
+  id: number;
+  task_id: number;
+  depends_on_task_id: number;
+  dependency_type: 'finish_to_start' | 'start_to_start';
+  created_at: string;
+}
+
+// 通知
+export interface Notification {
+  id: number;
+  user_id: string;
+  type: string;
+  title: string;
+  content?: string;
+  related_type?: string;
+  related_id?: number;
+  is_read: boolean;
+  created_at: string;
+  expires_at?: string;
+}
+
+// 审计日志
+export interface AuditLog {
+  id: number;
+  table_name: string;
+  record_id: number;
+  action: string;
+  changed_by: string;
+  old_values?: Record<string, unknown>;
+  new_values?: Record<string, unknown>;
+  changed_at: string;
 }

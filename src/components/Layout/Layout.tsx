@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { 
   Hexagon, 
@@ -16,6 +16,7 @@ import {
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabaseClient';
 import { useToast } from '../../hooks/useToast';
+import { PageSkeleton } from '../Skeletons';
 import './Layout.css';
 
 interface LayoutProps {
@@ -121,24 +122,26 @@ export default function Layout({ user }: LayoutProps) {
         </div>
       </aside>
 
-      <main className="layout-main">
-        <header className="main-header">
-          <button className="sidebar-toggle" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
-            {isSidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
-          </button>
-          <div className="header-breadcrumbs">
-            <span>首页</span> / <span className="current-page">当前页面</span>
-          </div>
-          <div className="header-notifications">
-            <button className="icon-btn">
-              <Bell size={18} />
+        <main className="layout-main">
+          <header className="main-header">
+            <button className="sidebar-toggle" onClick={() => setIsSidebarOpen(!isSidebarOpen)}>
+              {isSidebarOpen ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
             </button>
+            <div className="header-breadcrumbs">
+              <span>首页</span> / <span className="current-page">当前页面</span>
+            </div>
+            <div className="header-notifications">
+              <button className="icon-btn">
+                <Bell size={18} />
+              </button>
+            </div>
+          </header>
+          <div className="content-area">
+            <Suspense fallback={<PageSkeleton />}>
+              <Outlet />
+            </Suspense>
           </div>
-        </header>
-        <div className="content-area">
-          <Outlet />
-        </div>
-      </main>
+        </main>
       <ToastContainer />
     </div>
   );

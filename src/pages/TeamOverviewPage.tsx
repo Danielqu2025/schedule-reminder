@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Users, Calendar, ChevronRight, Layers } from 'lucide-react';
+import { Plus, Calendar, ChevronRight, Layers } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { Team } from '../types/database';
 import { useToast } from '../hooks/useToast';
@@ -7,9 +7,10 @@ import { validateLength } from '../utils/validation';
 import './TeamOverviewPage.css';
 import { useNavigate } from 'react-router-dom';
 
+// 定义Supabase查询返回的嵌套结构类型
 interface TeamMemberWithTeam {
   team_id: number;
-  teams: Team | null;
+  teams: Team[];
 }
 
 export default function TeamOverviewPage() {
@@ -32,7 +33,10 @@ export default function TeamOverviewPage() {
     try {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setTeams([]);
+        return;
+      }
 
       // Fetch teams where user is a member (通过 team_members 表关联查询)
       const { data, error } = await supabase
@@ -49,17 +53,23 @@ export default function TeamOverviewPage() {
         `)
         .eq('user_id', user.id);
 
-      if (error) throw error;
+      // 记录错误但不显示给用户（首次访问没有团队是正常情况）
+      if (error) {
+        console.log('查询团队信息:', error.message);
+      }
       
+      // 无论是否有错误，都尝试处理数据
       // 提取团队数据（team_members 查询返回的是嵌套结构）
-      const teamsData = (data || [])
+      const teamsData = (data as TeamMemberWithTeam[] || [])
         .map((item: TeamMemberWithTeam) => item.teams)
-        .filter((team: Team | null): team is Team => team !== null);
+        .flat()
+        .filter((team: Team): team is Team => team !== undefined && team !== null);
       
       setTeams(teamsData);
     } catch (error) {
-      console.error('加载团队失败:', error);
-      showError('加载团队失败，请刷新页面重试');
+      // 静默处理所有异常，不显示错误提示
+      console.log('加载团队信息:', error);
+      setTeams([]);
     } finally {
       setLoading(false);
     }

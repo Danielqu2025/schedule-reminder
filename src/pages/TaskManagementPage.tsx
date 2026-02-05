@@ -1,16 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Layers, Clock, AlertCircle, Plus } from 'lucide-react';
+import { Layers, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 import { Task, Team, WorkGroup } from '../types/database';
 import { useToast } from '../hooks/useToast';
 import { validateLength, validateDateRange } from '../utils/validation';
+import { TaskListSkeleton } from '../components/Skeletons';
 import './TaskManagementPage.css';
-
-interface TeamMemberWithTeam {
-  team_id: number;
-  teams: Team | null;
-}
 
 export default function TaskManagementPage() {
   const navigate = useNavigate();
@@ -18,52 +14,47 @@ export default function TaskManagementPage() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [workGroups, setWorkGroups] = useState<WorkGroup[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { showSuccess, showError, ToastContainer } = useToast();
-  
-  const [teamFilter, setTeamFilter] = useState<string>('all');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-
   const [formData, setFormData] = useState({
-    team_id: '',
-    work_group_id: '',
     title: '',
     description: '',
-    priority: 'medium' as Task['priority'],
+    team_id: '',
+    work_group_id: '',
+    status: 'todo',
+    priority: 'medium',
+    assignee_id: '',
+    deadline: '',
     start_date: '',
     end_date: '',
   });
+  const [teamFilter, setTeamFilter] = useState<'all' | string>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | string>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showCreateTask, setShowCreateTask] = useState(false);
+  const [showForm, setShowForm] = useState(false);
 
-  useEffect(() => {
-    loadInitialData();
-  }, []);
-
-  useEffect(() => {
-    loadTasks();
-  }, [teamFilter, statusFilter]);
-
-  const loadInitialData = async () => {
+  const loadInitialDataFunc = async () => {
     try {
+      setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data: memberData } = await supabase
-        .from('team_members')
-        .select(`
-          team_id,
-          teams (id, name, description, owner_id, created_at)
-        `)
-        .eq('user_id', user.id);
+      const { data: teamsData } = await supabase
+        .from('teams')
+        .select('*');
 
-      const teamsData = (memberData || [])
-        .map((item: TeamMemberWithTeam) => item.teams)
-        .filter((team: Team | null): team is Team => team !== null);
-      
+      const { data: workGroupsData } = await supabase
+        .from('work_groups')
+        .select('*');
+
       setTeams(teamsData || []);
+      setWorkGroups(workGroupsData || []);
     } catch (error) {
       console.error('加载基础数据失败:', error);
       showError('加载基础数据失败');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -79,7 +70,7 @@ export default function TaskManagementPage() {
         .eq('user_id', user.id);
 
       const userTeamIds = (memberData || []).map(m => m.team_id);
-      
+
       if (userTeamIds.length === 0) {
         setTasks([]);
         return;
@@ -89,7 +80,7 @@ export default function TaskManagementPage() {
         .from('tasks')
         .select('*')
         .in('team_id', userTeamIds);
-      
+
       if (teamFilter !== 'all') {
         query = query.eq('team_id', teamFilter);
       }
@@ -107,6 +98,16 @@ export default function TaskManagementPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadInitialDataFunc();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    loadTasks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamFilter, statusFilter]);
 
   const handleTeamChangeInForm = async (teamId: string) => {
     setFormData({ ...formData, team_id: teamId, work_group_id: '' });
@@ -172,6 +173,9 @@ export default function TaskManagementPage() {
         title: '',
         description: '',
         priority: 'medium',
+        status: 'todo',
+        assignee_id: '',
+        deadline: '',
         start_date: '',
         end_date: '',
       });
@@ -190,6 +194,10 @@ export default function TaskManagementPage() {
     const labels = { low: '低', medium: '中', high: '高' };
     return labels[p];
   };
+
+  if (loading) {
+    return <TaskListSkeleton />;
+  }
 
   const getStatusLabel = (s: Task['status']) => {
     const labels = { pending: '待办', in_progress: '进行中', completed: '已完成', cancelled: '已取消' };

@@ -1,21 +1,24 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useState, useEffect, Component, ReactNode } from 'react';
+import { useState, useEffect, Component, ReactNode, lazy, Suspense } from 'react';
 import { supabase } from './lib/supabaseClient';
 import { User } from '@supabase/supabase-js';
 
-// 页面组件
-import LoginPage from './pages/LoginPage';
-import PersonalSchedulePage from './pages/PersonalSchedulePage';
-import TeamOverviewPage from './pages/TeamOverviewPage';
-import TeamManagementPage from './pages/TeamManagementPage';
-import TaskManagementPage from './pages/TaskManagementPage';
-import WorkItemPage from './pages/WorkItemPage';
-import StatisticsPage from './pages/StatisticsPage';
-import InviteAcceptPage from './pages/InviteAcceptPage';
+// 页面组件 - 使用lazy loading实现代码分割
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const PersonalSchedulePage = lazy(() => import('./pages/PersonalSchedulePage'));
+const TeamOverviewPage = lazy(() => import('./pages/TeamOverviewPage'));
+const TeamManagementPage = lazy(() => import('./pages/TeamManagementPage'));
+const TaskManagementPage = lazy(() => import('./pages/TaskManagementPage'));
+const WorkItemPage = lazy(() => import('./pages/WorkItemPage'));
+const StatisticsPage = lazy(() => import('./pages/StatisticsPage'));
+const InviteAcceptPage = lazy(() => import('./pages/InviteAcceptPage'));
 
 // 布局组件
 import Layout from './components/Layout/Layout';
 import { useReminderEngine } from './hooks/useReminderEngine';
+
+// 骨架屏组件用于lazy loading的fallback
+import { PageSkeleton } from './components/Skeletons';
 
 // Error Boundary 组件
 interface ErrorBoundaryState {
@@ -162,27 +165,29 @@ function App() {
     <ErrorBoundary>
       <div className="stars"></div>
       <div className="nebula"></div>
-      <Routes>
-        <Route
-          path="/login"
-          element={user ? <Navigate to="/" replace /> : <LoginPage />}
-        />
-        <Route
-          path="/invite/accept"
-          element={<InviteAcceptPage />}
-        />
-        <Route
-          path="/"
-          element={user ? <Layout user={user} /> : <Navigate to="/login" replace />}
-        >
-          <Route index element={<PersonalSchedulePage />} />
-          <Route path="teams" element={<TeamOverviewPage />} />
-          <Route path="teams/:teamId" element={<TeamManagementPage />} />
-          <Route path="tasks" element={<TaskManagementPage />} />
-          <Route path="work-items" element={<WorkItemPage />} />
-          <Route path="statistics" element={<StatisticsPage />} />
-        </Route>
-      </Routes>
+      <Suspense fallback={<PageSkeleton />}>
+        <Routes>
+          <Route
+            path="/login"
+            element={user ? <Navigate to="/" replace /> : <LoginPage />}
+          />
+          <Route
+            path="/invite/accept"
+            element={<InviteAcceptPage />}
+          />
+          <Route
+            path="/"
+            element={user ? <Layout user={user} /> : <Navigate to="/login" replace />}
+          >
+            <Route index element={<PersonalSchedulePage />} />
+            <Route path="teams" element={<TeamOverviewPage />} />
+            <Route path="teams/:teamId" element={<TeamManagementPage />} />
+            <Route path="tasks" element={<TaskManagementPage />} />
+            <Route path="work-items" element={<WorkItemPage />} />
+            <Route path="statistics" element={<StatisticsPage />} />
+          </Route>
+        </Routes>
+      </Suspense>
     </ErrorBoundary>
   );
 }

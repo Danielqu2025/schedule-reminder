@@ -4,13 +4,28 @@ import { WorkItem, Task, TaskComment } from '../types/database';
 import './WorkItemPage.css';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToast } from '../hooks/useToast';
+import { validateLength } from '../utils/validation';
 import { format, addHours, differenceInHours, parseISO } from 'date-fns';
 
-
 interface TeamMember {
-  id: string;
-  email?: string;
-  name?: string;
+   id: string;
+   email?: string;
+   name?: string;
+   user_id?: string;
+}
+
+interface Collaborator {
+   id: string;
+   name: string;
+   email?: string;
+}
+
+interface Attachment {
+   id: string;
+   file_name: string;
+   file_url: string;
+   file_size?: number;
+   uploaded_at?: string;
 }
 
 export default function WorkItemPage() {
@@ -18,14 +33,16 @@ export default function WorkItemPage() {
   const taskId = searchParams.get('taskId');
   const navigate = useNavigate();
   const { showSuccess, showError, ToastContainer } = useToast();
-  
-  const [task, setTask] = useState<Task | null>(null);
-  const [workItems, setWorkItems] = useState<WorkItem[]>([]);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [comments, setComments] = useState<TaskComment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  
+
+   const [task, setTask] = useState<Task | null>(null);
+   const [workItems, setWorkItems] = useState<WorkItem[]>([]);
+   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+   const [comments, setComments] = useState<TaskComment[]>([]);
+   const [collaborators, setCollaborators] = useState<Collaborator[]>([]);
+   const [attachments, setAttachments] = useState<Attachment[]>([]);
+   const [loading, setLoading] = useState(true);
+   const [submitting, setSubmitting] = useState(false);
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -40,6 +57,65 @@ export default function WorkItemPage() {
 
   const [timeInputMode, setTimeInputMode] = useState<'duration' | 'endTime'>('duration');
   const [commentContent, setCommentContent] = useState('');
+
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+
+      const { data: workItemData, error: workItemError } = await supabase
+        .from('work_items')
+        .select(`
+          *,
+          task:tasks!inner(id, title, status, priority, work_group_id, created_by, created_at, updated_at, team_id),
+          task_comments(count),
+          collaborators(*),
+          attachments(*)
+        `)
+        .eq('id', taskId!)
+        .single();
+
+      if (workItemError) throw workItemError;
+      if (workItemData) {
+        setTask(workItemData);
+      }
+
+      const { data: commentsData, error: commentsError } = await supabase
+        .from('task_comments')
+        .select('*')
+        .eq('work_item_id', taskId!)
+        .order('created_at', { ascending: true });
+
+      if (commentsError) throw commentsError;
+      setComments(commentsData || []);
+
+      const { data: collaboratorsData, error: collaboratorsError } = await supabase
+        .from('work_item_collaborators')
+        .select('*')
+        .eq('work_item_id', taskId!);
+
+      if (collaboratorsError) throw collaboratorsError;
+      setCollaborators(collaboratorsData || []);
+
+      const { data: attachmentsData, error: attachmentsError } = await supabase
+        .from('work_item_attachments')
+        .select('*')
+        .eq('work_item_id', taskId!);
+
+      if (attachmentsError) throw attachmentsError;
+      setAttachments(attachmentsData || []);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : '加载失败，请重试';
+      showError(errorMessage);
+      navigate('/tasks');
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate, showError, taskId]);
 
   useEffect(() => {
     if (taskId) {
@@ -64,82 +140,7 @@ export default function WorkItemPage() {
         supabase.removeChannel(channel);
       };
     }
-  }, [taskId]);
-
-
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate('/login');
-        return;
-      }
-
-      // 1. Fetch Task - 先验证用户是否有权限访问此任务
-      const { data: taskData, error: taskError } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('id', taskId)
-        .single();
-      
-      if (taskError) throw taskError;
-      
-      // 验证用户是否属于该任务的团队
-      if (taskData.team_id) {
-        const { data: memberCheck } = await supabase
-          .from('team_members')
-          .select('team_id')
-          .eq('team_id', taskData.team_id)
-          .eq('user_id', user.id)
-          .single();
-        
-        if (!memberCheck) {
-          showError('您没有权限访问此任务');
-          navigate('/tasks');
-          return;
-        }
-      }
-      
-      setTask(taskData);
-
-      // 2. Fetch Work Items
-      const { data: itemsData, error: itemsError } = await supabase
-        .from('work_items')
-        .select('*')
-        .eq('task_id', taskId)
-        .order('sequence_number', { ascending: true });
-      
-      if (itemsError) throw itemsError;
-      setWorkItems(itemsData || []);
-
-      // 3. Fetch Comments
-      const { data: commentsData, error: commentsError } = await supabase
-        .from('task_comments')
-        .select('*')
-        .eq('task_id', taskId)
-        .order('created_at', { ascending: false });
-      
-      if (commentsError) throw commentsError;
-      setComments(commentsData || []);
-
-      // 4. Fetch Team Members for assignment
-      if (taskData.team_id) {
-        const { data: memberData } = await supabase
-          .from('team_members')
-          .select('user_id')
-          .eq('team_id', taskData.team_id);
-        setTeamMembers(memberData || []);
-      }
-    } catch (error) {
-      console.error('加载数据失败:', error);
-      const errorMessage = error instanceof Error ? error.message : '加载失败，请重试';
-      showError(errorMessage);
-      navigate('/tasks');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [taskId, loadData]);
 
   const handleTimeCalculation = useCallback((field: 'duration' | 'endTime', value: string) => {
     if (!formData.planned_start_time) return;
@@ -459,8 +460,8 @@ export default function WorkItemPage() {
                 style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '0.9rem', backgroundColor: 'white' }}
               >
                 <option value="">选择负责人</option>
-                {teamMembers.map(m => (
-                  <option key={m.user_id} value={m.user_id}>用户 {m.user_id.slice(0, 8)}</option>
+                {teamMembers.filter(m => m.user_id).map(m => (
+                  <option key={m.user_id!} value={m.user_id!}>用户 {m.user_id!.slice(0, 8)}</option>
                 ))}
               </select>
             </div>
@@ -529,19 +530,19 @@ export default function WorkItemPage() {
             <div className="form-group" style={{ marginBottom: '15px' }}>
               <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 500, marginBottom: '6px', color: '#374151' }}>配合人</label>
               <div style={{ maxHeight: '100px', overflowY: 'auto', border: '1px solid #d1d5db', borderRadius: '6px', padding: '10px' }}>
-                {teamMembers.map(m => (
+                {teamMembers.filter(m => m.user_id).map(m => (
                   <label key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px', fontSize: '0.85rem' }}>
-                    <input 
-                      type="checkbox" 
-                      checked={formData.collaborators.includes(m.user_id)}
+                    <input
+                      type="checkbox"
+                      checked={formData.collaborators.includes(m.user_id!)}
                       onChange={(e) => {
-                        const newCols = e.target.checked 
-                          ? [...formData.collaborators, m.user_id]
+                        const newCols = e.target.checked
+                          ? [...formData.collaborators, m.user_id!]
                           : formData.collaborators.filter(id => id !== m.user_id);
                         setFormData({...formData, collaborators: newCols});
                       }}
                     />
-                    用户 {m.user_id.slice(0, 8)}
+                    用户 {m.user_id!.slice(0, 8)}
                   </label>
                 ))}
               </div>

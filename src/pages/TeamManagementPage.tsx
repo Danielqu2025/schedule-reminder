@@ -5,6 +5,7 @@ import { Team, TeamMember, WorkGroup } from '../types/database';
 import { useToast } from '../hooks/useToast';
 import { validateLength } from '../utils/validation';
 import TeamInvitationManager from '../components/TeamInvitationManager';
+import { TeamListSkeleton } from '../components/Skeletons';
 
 import './TeamManagementPage.css';
 
@@ -27,47 +28,64 @@ export default function TeamManagementPage() {
     if (teamId) {
       loadTeamData();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
+
+  if (loading) {
+    return <TeamListSkeleton />;
+  }
 
   const loadTeamData = async () => {
     try {
       setLoading(true);
-      
+      // Load team data
       const { data: teamData, error: teamError } = await supabase
         .from('teams')
         .select('*')
-        .eq('id', teamId)
+        .eq('id', parseInt(teamId!))
         .single();
 
       if (teamError) throw teamError;
-      setTeam(teamData);
 
-      const { data: memberData, error: memberError } = await supabase
+      if (teamData) {
+        setTeam(teamData);
+      }
+
+      // Load team members
+      const { data: membersData, error: membersError } = await supabase
         .from('team_members')
         .select('*')
-        .eq('team_id', teamId);
+        .eq('team_id', teamData?.id);
 
-      if (memberError) throw memberError;
-      setMembers(memberData || []);
+      if (membersError) throw membersError;
 
-      const { data: groupData, error: groupError } = await supabase
+      if (membersData) {
+        setMembers(membersData);
+      }
+
+      // Load work groups
+      const { data: groupsData, error: groupsError } = await supabase
         .from('work_groups')
         .select('*')
-        .eq('team_id', teamId);
+        .eq('team_id', teamData?.id);
 
-      if (groupError) throw groupError;
-      setWorkGroups(groupData || []);
+      if (groupsError) throw groupsError;
 
+      if (groupsData) {
+        setWorkGroups(groupsData);
+      }
     } catch (error) {
       console.error('加载团队数据失败:', error);
       const errorMessage = error instanceof Error ? error.message : '加载失败，请重试';
       showError(errorMessage);
-      navigate('/teams');
     } finally {
       setLoading(false);
     }
   };
 
+  if (loading) {
+    return <TeamListSkeleton />;
+  }
 
   const handleCreateGroup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,7 +181,7 @@ export default function TeamManagementPage() {
     <div className="team-management-page fade-in">
       <div className="team-header-premium">
         <button onClick={() => navigate('/teams')} className="back-link">
-          ← 返回团队列表
+          ◀ 返回团队列表
         </button>
         <div className="team-title-row">
           <h1>{team.name}</h1>
@@ -305,6 +323,7 @@ export default function TeamManagementPage() {
           </div>
         </div>
       )}
+      <ToastContainer />
     </div>
   );
 }

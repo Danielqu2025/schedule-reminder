@@ -110,11 +110,11 @@ export function validateTimeRange(
 /**
  * 验证必填字段
  */
-export function validateRequired(value: any, fieldName: string = '字段'): ValidationResult {
+export function validateRequired(value: string | number | boolean | null | undefined, fieldName: string = '字段'): ValidationResult {
   if (value === null || value === undefined || value === '') {
     return { isValid: false, error: `${fieldName}为必填项` };
   }
-  
+
   return { isValid: true };
 }
 

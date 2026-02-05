@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { TeamInvitation } from '../types/database';
 import { useToast } from '../hooks/useToast';
@@ -16,15 +16,16 @@ export default function TeamInvitationManager({ teamId, teamName, onInviteSucces
   const [inviteEmail, setInviteEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [pendingInvitations, setPendingInvitations] = useState<TeamInvitation[]>([]);
-  const { showSuccess, showError } = useToast();
+  const { showSuccess, showError, ToastContainer } = useToast();
 
   useEffect(() => {
     if (teamId) {
       fetchPendingInvitations();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teamId]);
 
-  const fetchPendingInvitations = async () => {
+  const fetchPendingInvitations = useCallback(async () => {
     try {
       const { data: invitationData, error: invitationError } = await supabase
         .from('team_invitations')
@@ -34,14 +35,14 @@ export default function TeamInvitationManager({ teamId, teamName, onInviteSucces
         .gt('expires_at', new Date().toISOString());
 
       if (invitationError) throw invitationError;
-      
+
       if (invitationData) {
         setPendingInvitations(invitationData);
       }
     } catch (error) {
       console.error('加载邀请列表失败:', error);
     }
-  };
+  }, [teamId]);
 
   const handleInviteMember = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,82 +64,85 @@ export default function TeamInvitationManager({ teamId, teamName, onInviteSucces
         return;
       }
 
-      // 调用数据库函数创建邀请
-      const { data: invitationData, error: invitationError } = await supabase
-        .rpc('create_team_invitation', {
-          p_team_id: parseInt(teamId),
-          p_email: inviteEmail.trim(),
-          p_invited_by: user.id
-        });
+      // 检查是否已有待处理的邀请
+      const { data: existingInvites } = await supabase
+        .from('team_invitations')
+        .select('id')
+        .eq('team_id', teamId)
+        .eq('email', inviteEmail.trim().toLowerCase())
+        .eq('status', 'pending')
+        .gt('expires_at', new Date().toISOString());
+
+      if (existingInvites && existingInvites.length > 0) {
+        showError('该邮箱已有待处理的邀请');
+        return;
+      }
+
+      const token = crypto.randomUUID();
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      const { data: invitation, error: invitationError } = await supabase
+        .from('team_invitations')
+        .insert({
+          team_id: parseInt(teamId),
+          email: inviteEmail.trim().toLowerCase(),
+          invited_by: user.id,
+          token,
+          status: 'pending',
+          expires_at: expiresAt,
+        })
+        .select()
+        .single();
 
       if (invitationError) {
-        // 处理特定错误
         const errorMsg = invitationError.message || '';
-        const errorCode = invitationError && typeof invitationError === 'object' && 'code' in invitationError 
-          ? String(invitationError.code) 
-          : '';
-        
-        if (errorMsg.includes('已经是团队成员')) {
-          showError('该用户已经是团队成员');
-        } else if (errorMsg.includes('已有待处理的邀请')) {
+        if (errorMsg.includes('duplicate') || errorMsg.includes('unique')) {
           showError('该邮箱已有待处理的邀请');
-        } else if (errorMsg.includes('stack depth limit exceeded') || errorCode === '54001') {
-          showError('系统错误：请稍后重试。如果问题持续，请联系管理员。');
-          console.error('栈溢出错误详情:', invitationError);
         } else {
           throw invitationError;
         }
         return;
       }
 
-      if (!invitationData || invitationData.length === 0) {
-        throw new Error('创建邀请失败：未返回数据');
-      }
-
-      const invitation = invitationData[0];
       if (!invitation || !invitation.token) {
         throw new Error('创建邀请失败：返回数据不完整');
       }
       const inviteUrl = `${window.location.origin}/invite/accept?token=${invitation.token}`;
 
-      // 发送邀请邮件
-      try {
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        const { error: emailError } = await fetch(`${supabaseUrl}/functions/v1/send-invitation-email`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({
-            email: inviteEmail.trim(),
-            teamName: teamName || '团队',
-            inviteUrl: inviteUrl,
-            inviterName: user.email || '团队成员',
-          }),
-        }).then(res => res.json());
+      // 先给用户即时反馈，避免“点了没反应”的感觉
+      showSuccess('邀请已创建，正在发送邮件…');
 
-        if (emailError) {
-          console.warn('邮件发送失败，但邀请已创建:', emailError);
-          // 即使邮件发送失败，也显示成功，因为邀请已创建
-          showSuccess(`邀请已创建！邀请链接：${inviteUrl}`);
-        } else {
-          showSuccess('邀请邮件已发送！');
-        }
-      } catch (emailErr) {
-        console.warn('邮件发送失败，但邀请已创建:', emailErr);
-        // 即使邮件发送失败，也显示成功，因为邀请已创建
-        showSuccess(`邀请已创建！邀请链接：${inviteUrl}`);
+      // 带超时的 Edge Function 调用（请求挂起时 12 秒后当作失败，仍提示邀请已创建）
+      const INVITE_EMAIL_TIMEOUT_MS = 12000;
+      const invokePromise = supabase.functions.invoke('send-invitation-email', {
+        body: {
+          email: inviteEmail.trim(),
+          teamName: teamName || '团队',
+          inviteUrl,
+          inviterName: user.email || '团队成员',
+        },
+      });
+      const timeoutPromise = new Promise<{ error: Error }>((resolve) =>
+        setTimeout(() => resolve({ error: new Error('timeout') }), INVITE_EMAIL_TIMEOUT_MS)
+      );
+      const { error: emailError } = await Promise.race([invokePromise, timeoutPromise]);
+
+      if (emailError) {
+        console.warn('邮件发送失败或超时，但邀请已创建:', emailError);
+        showSuccess('邀请已创建！请将邀请链接复制发送给受邀人（链接已生成）');
+      } else {
+        showSuccess('邀请邮件已发送！');
       }
 
       setInviteEmail('');
       setShowInviteForm(false);
-      fetchPendingInvitations(); // Refresh local pending list
-      onInviteSuccess(); // Notify parent to refresh member list (if needed)
+      fetchPendingInvitations();
+      onInviteSuccess();
     } catch (error) {
       console.error('邀请成员失败:', error);
-      const errorMessage = error instanceof Error ? error.message : '邀请失败，请重试';
-      showError(errorMessage);
+      const err = error as { message?: string; code?: string };
+      const msg = err?.message || (err?.code ? `错误码: ${err.code}` : '') || '邀请失败，请重试';
+      showError(msg.length > 80 ? '邀请失败，请检查权限或稍后重试' : msg);
     } finally {
       setSubmitting(false);
     }
@@ -226,6 +230,7 @@ export default function TeamInvitationManager({ teamId, teamName, onInviteSucces
           </div>
         </div>
       )}
+      <ToastContainer />
     </div>
   );
 }

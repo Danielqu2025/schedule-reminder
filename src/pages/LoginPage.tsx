@@ -25,7 +25,7 @@ export default function LoginPage() {
       // 如果登录后需要处理邀请，显示提示
       console.log('检测到待处理的邀请');
     }
-  }, []);
+  }, [redirectPath]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

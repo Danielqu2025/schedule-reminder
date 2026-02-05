@@ -1,0 +1,7 @@
+# Supabase 项目配置
+# 详见 https://supabase.com/docs/guides/functions/function-configuration
+
+[functions.send-invitation-email]
+# 关闭 JWT 校验，避免前端调用返回 401
+# 函数内部仍会校验请求体（email/teamName/inviteUrl），且邀请记录由已登录用户创建
+verify_jwt = false

@@ -2,9 +2,8 @@ import { useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { Schedule } from '../types/database';
 import { useNotifications } from './useNotifications';
-import { isWithinInterval, addMinutes, parse, format, differenceInDays, parseISO, isValid } from 'date-fns';
-
-const REMINDER_CACHE_KEY = 'projectflow_reminded_ids';
+import { cacheManager } from '../utils/cacheManager';
+import { addMinutes, format, differenceInDays } from 'date-fns';
 
 /**
  * 提醒引擎钩子
@@ -13,15 +12,14 @@ const REMINDER_CACHE_KEY = 'projectflow_reminded_ids';
  */
 export function useReminderEngine(userId: string | undefined) {
   const { showNotification } = useNotifications();
-  
+
   // 初始化已提醒 ID
-  const getInitialRemindedIds = (): Set<string> => {
+  const getInitialRemindedIds = async (): Promise<Set<string>> => {
     if (typeof window === 'undefined') return new Set();
-    const cached = localStorage.getItem(REMINDER_CACHE_KEY);
+    const cached = await cacheManager.get('reminded_ids');
     if (cached) {
       try {
-        const parsed = JSON.parse(cached);
-        return new Set(Array.isArray(parsed) ? parsed : []);
+        return new Set(Array.isArray(cached) ? cached : []);
       } catch (e) {
         console.error('Failed to parse reminder cache', e);
       }
@@ -29,28 +27,22 @@ export function useReminderEngine(userId: string | undefined) {
     return new Set();
   };
 
-  const remindedIds = useRef<Set<string>>(getInitialRemindedIds());
+  const remindedIds = useRef<Set<string>>(new Set());
+
+  // 异步加载初始缓存
+  getInitialRemindedIds().then((ids) => {
+    remindedIds.current = ids;
+  });
 
   // 辅助函数：持久化已提醒 ID
-  const saveRemindedIds = useCallback((id: string) => {
+  const saveRemindedIds = useCallback(async (id: string) => {
     remindedIds.current.add(id);
-    localStorage.setItem(REMINDER_CACHE_KEY, JSON.stringify(Array.from(remindedIds.current)));
+    await cacheManager.save('reminded_ids', Array.from(remindedIds.current));
   }, []);
-
-  // 辅助函数：尝试解析多种时间格式
-  const parseScheduleTime = (timeStr: string, referenceDate: Date) => {
-    // 尝试 HH:mm:ss
-    let parsed = parse(timeStr, 'HH:mm:ss', referenceDate);
-    if (isValid(parsed)) return parsed;
-    
-    // 尝试 HH:mm
-    parsed = parse(timeStr, 'HH:mm', referenceDate);
-    return parsed;
-  };
 
   const lastStagnantCheck = useRef<number>(0);
 
-  // 1. 检查即将到期的日程
+  // 1. 检查今日/即将开始的日程（使用 start_date，无 time 字段）
   const checkUpcomingSchedules = useCallback(async () => {
     if (!userId) return;
 
@@ -60,29 +52,21 @@ export function useReminderEngine(userId: string | undefined) {
         .from('schedules')
         .select('*')
         .eq('user_id', userId)
-        .eq('date', todayStr)
+        .eq('start_date', todayStr)
         .not('status', 'in', '("completed","cancelled")');
 
       if (error) throw error;
       if (!schedules) return;
 
-      const now = new Date();
-      const nextInterval = addMinutes(now, 2); // 扩大窗口到2分钟，防止漏检
-
-      schedules.forEach((schedule: Schedule) => {
-        const cacheId = `schedule-${schedule.id}`;
+      schedules.forEach(async (schedule: Schedule) => {
+        const cacheId = `schedule-${schedule.id}-${todayStr}`;
         if (remindedIds.current.has(cacheId)) return;
 
-        const scheduleTime = parseScheduleTime(schedule.time, now);
-        if (!isValid(scheduleTime)) return;
-
-        if (isWithinInterval(scheduleTime, { start: now, end: nextInterval })) {
-          showNotification(`🔔 日程提醒: ${schedule.title}`, {
-            body: `时间: ${schedule.time}${schedule.description ? `\n描述: ${schedule.description}` : ''}`,
-            tag: cacheId,
-          });
-          saveRemindedIds(cacheId);
-        }
+        showNotification(`🔔 日程提醒: ${schedule.title}`, {
+          body: `计划今日开始${schedule.description ? `\n描述: ${schedule.description}` : ''}`,
+          tag: cacheId,
+        });
+        await saveRemindedIds(cacheId);
       });
     } catch (error) {
       console.error('Check upcoming schedules failed:', error);
@@ -157,7 +141,7 @@ export function useReminderEngine(userId: string | undefined) {
         planned_start_time?: string;
       }
 
-      workItems.forEach((item: WorkItemData) => {
+      workItems.forEach(async (item: WorkItemData) => {
         const cacheId = `workitem-${item.id}`;
         if (!item.planned_start_time || remindedIds.current.has(cacheId)) return;
 
@@ -165,19 +149,18 @@ export function useReminderEngine(userId: string | undefined) {
           body: `计划开始时间: ${new Date(item.planned_start_time).toLocaleString()}`,
           tag: cacheId,
         });
-        saveRemindedIds(cacheId);
+        await saveRemindedIds(cacheId);
       });
     } catch (error) {
       console.error('Check upcoming work items failed:', error);
     }
   }, [userId, showNotification, saveRemindedIds]);
 
-
   // 统一运行器
-  const runChecks = useCallback(() => {
-    checkUpcomingSchedules();
-    checkStagnantTasks();
-    checkUpcomingWorkItems();
+  const runChecks = useCallback(async () => {
+    await checkUpcomingSchedules();
+    await checkStagnantTasks();
+    await checkUpcomingWorkItems();
   }, [checkUpcomingSchedules, checkStagnantTasks, checkUpcomingWorkItems]);
 
   useEffect(() => {
