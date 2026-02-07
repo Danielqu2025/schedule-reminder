@@ -24,20 +24,8 @@ export default function TeamManagementPage() {
   const [groupMembers, setGroupMembers] = useState<string[]>([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (teamId) {
-      loadTeamData();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teamId]);
-
-  if (loading) {
-    return <TeamListSkeleton />;
-  }
-
   const loadTeamData = async () => {
     try {
-      setLoading(true);
       // Load team data
       const { data: teamData, error: teamError } = await supabase
         .from('teams')
@@ -83,7 +71,15 @@ export default function TeamManagementPage() {
     }
   };
 
+  useEffect(() => {
+    if (teamId) {
+      loadTeamData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamId]);
+
   if (loading) {
+
     return <TeamListSkeleton />;
   }
 

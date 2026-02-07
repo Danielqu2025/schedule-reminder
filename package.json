@@ -1,6 +1,6 @@
 {
   "name": "schedule-reminder",
-  "version": "2.3.0",
+  "version": "2.6.0",
   "description": "团队项目管理系统 - React版本",
   "type": "module",
   "scripts": {

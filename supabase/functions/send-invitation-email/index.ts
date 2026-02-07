@@ -74,7 +74,35 @@ serve(async (req) => {
 
       if (inviteError) {
         if (inviteError.message.includes('already registered') || inviteError.message.includes('already exists')) {
+          console.log(`用户 ${email} 已存在，尝试发送通知邮件和站内信`);
+          
+          // 1. 尝试发送自定义邮件 (需要 RESEND_API_KEY)
           await sendCustomEmail(supabaseAdmin, email, emailSubject, emailBody);
+          
+          // 2. 发送站内信通知
+          // 先查找用户 ID
+          const { data: userData } = await supabaseAdmin
+            .from('auth.users') // 注意：通常无法直接查 auth.users，需要用 admin API listUsers
+            .select('id') 
+            .eq('email', email) 
+            .single().catch(() => ({ data: null })); // 这种写法在 Edge Function 可能受限，改用 listUsers
+
+          const { data: { users } } = await supabaseAdmin.auth.admin.listUsers();
+          const targetUser = users.find(u => u.email === email);
+
+          if (targetUser) {
+             await supabaseAdmin.from('notifications').insert({
+               user_id: targetUser.id,
+               type: 'team_invitation',
+               title: '团队邀请',
+               content: `${inviterName || '有人'} 邀请您加入 ${teamName} 团队`,
+               related_type: 'team',
+               // related_id: teamId, // body 里没传 teamId，暂时略过
+               is_read: false
+             });
+             console.log('已发送站内信通知');
+          }
+
         } else {
           throw inviteError;
         }
@@ -87,7 +115,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true, message: '邀请邮件已发送' }),
+      JSON.stringify({ success: true, message: '邀请处理完成' }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
@@ -105,6 +133,40 @@ async function sendCustomEmail(
   subject: string,
   htmlBody: string
 ) {
-  console.log('自定义邮件（已记录）:', { to: email, subject, htmlLength: htmlBody.length });
-  console.warn('要发送自定义 HTML 邮件，请在 Supabase Dashboard 配置 SMTP 与邮件模板。');
+  const resendApiKey = Deno.env.get('RESEND_API_KEY');
+  
+  if (resendApiKey) {
+    console.log('检测到 RESEND_API_KEY，正在通过 Resend 发送邮件...');
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${resendApiKey}`,
+        },
+        body: JSON.stringify({
+          from: 'Team <onboarding@resend.dev>', // 默认测试发件人，生产环境需配置域名
+          to: email,
+          subject: subject,
+          html: htmlBody,
+        }),
+      });
+      
+      const data = await res.json();
+      if (!res.ok) {
+        console.error('Resend API 错误:', data);
+      } else {
+        console.log('Resend 邮件发送成功:', data);
+        return;
+      }
+    } catch (e) {
+      console.error('调用 Resend 失败:', e);
+    }
+  } else {
+    console.log('未配置 RESEND_API_KEY，跳过自定义邮件发送。');
+    console.log('模拟邮件内容:', { to: email, subject });
+  }
+  
+  console.warn('提示：对于已注册用户，Supabase Auth 不会发送邀请邮件。请配置 RESEND_API_KEY 以发送通知。');
 }
+

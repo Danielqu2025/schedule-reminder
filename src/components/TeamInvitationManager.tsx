@@ -11,7 +11,19 @@ interface TeamInvitationManagerProps {
   onInviteSuccess: () => void;
 }
 
+// Simple UUID generator fallback
+function generateUUID() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 export default function TeamInvitationManager({ teamId, teamName, onInviteSuccess }: TeamInvitationManagerProps) {
+
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -78,10 +90,11 @@ export default function TeamInvitationManager({ teamId, teamName, onInviteSucces
         return;
       }
 
-      const token = crypto.randomUUID();
+      const token = generateUUID();
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
       const { data: invitation, error: invitationError } = await supabase
+
         .from('team_invitations')
         .insert({
           team_id: parseInt(teamId),
@@ -178,9 +191,11 @@ export default function TeamInvitationManager({ teamId, teamName, onInviteSucces
       {showInviteForm && (
         <form onSubmit={handleInviteMember} className="invite-form-premium card slide-in">
           <div className="form-group">
-            <label>邮箱地址</label>
+            <label htmlFor="invite-email">邮箱地址</label>
             <input 
+              id="invite-email"
               type="email" 
+
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
               required

@@ -73,17 +73,19 @@ Dashboard 中：
 
 1. **Project Settings** → **Edge Functions**
 2. 找到 **Secrets**（或 **Environment Variables**）
-3. 添加/确认以下密钥（通常 Supabase 已自动注入，无需手动添加）：
+3. 添加/确认以下密钥：
    - `SUPABASE_URL`：项目 URL（一般已存在）
-   - `SUPABASE_SERVICE_ROLE_KEY`：上一步复制的 service_role 密钥
+   - `SUPABASE_SERVICE_ROLE_KEY`：service_role 密钥
+   - `RESEND_API_KEY`：[Resend](https://resend.com) 的 API Key（推荐添加）
 
 若使用 CLI 设置（可选）：
 
 ```powershell
-supabase secrets set SUPABASE_SERVICE_ROLE_KEY=你的_service_role_密钥
+supabase secrets set SUPABASE_SERVICE_ROLE_KEY=你的_service_role_密钥 RESEND_API_KEY=你的_resend_api_key
 ```
 
-> 注意：`SUPABASE_URL` 和 `SUPABASE_SERVICE_ROLE_KEY` 在部署 Edge Function 时通常已由 Supabase 自动注入，只需确认 Dashboard 中未覆盖即可。
+> 注意：`SUPABASE_URL` 和 `SUPABASE_SERVICE_ROLE_KEY` 在部署 Edge Function 时通常已由 Supabase 自动注入。
+
 
 ---
 
@@ -186,7 +188,10 @@ curl -X POST "https://scewuzopntegumyekgbf.supabase.co/functions/v1/send-invitat
 ### 4. 邮件未真正发出
 
 - 当前逻辑会优先使用 `auth.admin.inviteUserByEmail`；若邮箱未注册，Supabase 会发邀请邮件。
-- 若邮箱已注册，会走 `sendCustomEmail`，目前仅为日志记录；要真正发自定义 HTML 邮件，需在 Supabase 中配置 [SMTP](https://supabase.com/docs/guides/auth/auth-smtp) 和 [邮件模板](https://supabase.com/docs/guides/auth/auth-email-templates)。
+- 若邮箱已注册，**会自动切换到 Resend 服务发送邀请邮件**。
+- 请确保您已在 Resend 后台验证了您的域名，否则只能发给自己（onboarding@resend.dev）。
+- 若您希望所有人都能收到邮件，请参考 README.md 中关于 Resend 域名的配置。
+
 
 ---
 
@@ -197,7 +202,8 @@ curl -X POST "https://scewuzopntegumyekgbf.supabase.co/functions/v1/send-invitat
 | 1 | 安装 Supabase CLI：`npm install -g supabase` |
 | 2 | 登录：`supabase login` |
 | 3 | 关联项目：`supabase link --project-ref <项目ID>` |
-| 4 | 确认/设置 Service Role Key（Dashboard 或 `supabase secrets set`） |
+| 4 | 设置密钥：`SERVICE_ROLE_KEY` 与 `RESEND_API_KEY` |
+
 | 5 | 部署：`supabase functions deploy send-invitation-email` |
 | 6 | 前端使用 `supabase.functions.invoke('send-invitation-email', { body })` 在创建邀请后调用 |
 

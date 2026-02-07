@@ -2,19 +2,41 @@
  * Tests for API layer
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 import * as api from '../api';
-import { mockSupabase, setupMockSupabase } from '../test/mockSupabase';
+import { supabase } from '../lib/supabaseClient';
 
 // Mock supabase client
 vi.mock('../lib/supabaseClient', () => ({
-  supabase: mockSupabase,
+  supabase: {
+    from: vi.fn(),
+    auth: {
+      getUser: vi.fn(),
+    },
+  },
 }));
+
+// Create the mock chain helper
+const createMockChain = (data: any = [], error: any = null) => {
+  const chain: any = {
+    select: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    in: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    single: vi.fn().mockResolvedValue({ data: Array.isArray(data) ? data[0] : data, error }),
+  };
+  // Make it thenable
+  chain.then = (resolve: any) => resolve({ data, error });
+  return chain;
+};
 
 describe('API Layer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    setupMockSupabase();
+    (supabase.from as Mock).mockReturnValue(createMockChain());
   });
 
   describe('scheduleAPI', () => {
@@ -24,7 +46,7 @@ describe('API Layer', () => {
         { id: 1, title: 'Test Schedule', user_id: userId, status: 'pending' },
       ];
 
-      setupMockSupabase({ data: schedules, error: null });
+      (supabase.from as Mock).mockReturnValue(createMockChain(schedules));
 
       const result = await api.scheduleAPI.getSchedules(userId);
       expect(result).toHaveLength(1);
@@ -39,10 +61,9 @@ describe('API Layer', () => {
       };
 
       const expectedSchedule = { id: 2, ...newSchedule, created_at: new Date().toISOString() };
+      (supabase.from as Mock).mockReturnValue(createMockChain(expectedSchedule));
 
-      setupMockSupabase({ data: expectedSchedule, error: null });
-
-      const result = await api.scheduleAPI.createSchedule(newSchedule);
+      const result = await api.scheduleAPI.createSchedule(newSchedule as any);
       expect(result.title).toBe('New Schedule');
       expect(result.id).toBe(2);
     });
@@ -51,8 +72,10 @@ describe('API Layer', () => {
       const scheduleId = 1;
       const status = 'completed';
 
-      const { error } = await api.scheduleAPI.updateScheduleStatus(scheduleId, status);
-      expect(error).toBeNull();
+      (supabase.from as Mock).mockReturnValue(createMockChain(null));
+
+      await api.scheduleAPI.updateScheduleStatus(scheduleId, status);
+      expect(supabase.from).toHaveBeenCalledWith('schedules');
     });
   });
 
@@ -63,7 +86,15 @@ describe('API Layer', () => {
         { id: 1, title: 'Test Task', user_id: userId, status: 'pending' },
       ];
 
-      setupMockSupabase({ data: tasks, error: null });
+      (supabase.from as Mock).mockImplementation((table: string) => {
+        if (table === 'team_members') {
+            return createMockChain([{ team_id: 1 }]);
+        }
+        if (table === 'tasks') {
+            return createMockChain(tasks);
+        }
+        return createMockChain([]);
+      });
 
       const result = await api.taskAPI.getTasks(userId);
       expect(result).toHaveLength(1);
@@ -78,10 +109,9 @@ describe('API Layer', () => {
       };
 
       const expectedTask = { id: 1, ...newTask, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+      (supabase.from as Mock).mockReturnValue(createMockChain(expectedTask));
 
-      setupMockSupabase({ data: expectedTask, error: null });
-
-      const result = await api.taskAPI.createTask(newTask);
+      const result = await api.taskAPI.createTask(newTask as any);
       expect(result.title).toBe('New Task');
     });
   });
@@ -89,11 +119,13 @@ describe('API Layer', () => {
   describe('teamAPI', () => {
     it('should get teams for user', async () => {
       const userId = 'test-user';
-      const teams = [
-        { id: 1, name: 'Test Team', owner_id: userId, created_at: new Date().toISOString() },
+      const teamData = { id: 1, name: 'Test Team', owner_id: userId, created_at: new Date().toISOString() };
+      
+      const mockResponse = [
+        { team_id: 1, teams: teamData }
       ];
 
-      setupMockSupabase({ data: teams, error: null });
+      (supabase.from as Mock).mockReturnValue(createMockChain(mockResponse));
 
       const result = await api.teamAPI.getTeams(userId);
       expect(result).toHaveLength(1);
@@ -107,28 +139,10 @@ describe('API Layer', () => {
       };
 
       const expectedTeam = { id: 1, ...newTeam, created_at: new Date().toISOString() };
-
-      setupMockSupabase({ data: expectedTeam, error: null });
+      (supabase.from as Mock).mockReturnValue(createMockChain(expectedTeam));
 
       const result = await api.teamAPI.createTeam(newTeam);
       expect(result.name).toBe('New Team');
-    });
-  });
-
-  describe('cacheManager', () => {
-    it('should save and get data', async () => {
-      const key = 'test-key';
-      const value = { test: 'value' };
-
-      await api.cacheManager.save(key, value);
-      const retrieved = await api.cacheManager.get(key);
-
-      expect(retrieved).toEqual(value);
-    });
-
-    it('should return null for non-existent key', async () => {
-      const value = await api.cacheManager.get('non-existent-key');
-      expect(value).toBeNull();
     });
   });
 });

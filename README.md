@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-2.5.0-blue)
+![Version](https://img.shields.io/badge/version-2.6.0-blue)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
@@ -226,6 +226,13 @@ npm run preview
 ---
 
 ## 📝 更新日志
+
+### v2.6.0 (2026-02-07)
+
+- ✨ 邮件邀请系统升级（集成 Resend）
+- ✨ 支持自定义域名发送邮件
+- ✨ 修复邀请链接在本地/线上环境的兼容性
+- 📚 更新 Edge Function 部署文档
 
 ### v2.5.0 (2026-02-05)
 

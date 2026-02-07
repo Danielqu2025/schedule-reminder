@@ -68,9 +68,13 @@ cp .env.example .env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 
+# 邮件服务 (可选，推荐)
+RESEND_API_KEY=re_123456789
+
 # 可选：开发环境配置
 VITE_APP_NAME=ProjectFlow
 VITE_APP_VERSION=2.0.0
+
 ```
 
 ---
@@ -481,5 +485,5 @@ const data = response.data as any;
 
 ---
 
-**最后更新**: 2026-01-31  
+**最后更新**: 2026-02-07  
 **维护者**: Development Team

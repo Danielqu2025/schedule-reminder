@@ -18,6 +18,16 @@ VITE_SUPABASE_URL=https://your-project-id.supabase.co
 VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 # ==========================================
+# 邮件服务配置（推荐）
+# ==========================================
+
+# Resend API Key
+# 用于发送团队邀请邮件（解除 Supabase 仅能发给注册用户的限制）
+# 在 Resend Dashboard > API Keys 中获取
+RESEND_API_KEY=re_123456789...
+
+
+# ==========================================
 # 应用配置（可选）
 # ==========================================
 

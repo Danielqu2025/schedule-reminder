@@ -316,8 +316,12 @@ export const teamMemberAPI = {
    * 邀请成员
    */
   async inviteMember(invitation: Omit<TeamInvitation, 'id' | 'token' | 'status' | 'created_at'>): Promise<TeamInvitation> {
-    const token = crypto.randomUUID();
+    const token = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
 
     const { data, error } = await supabase
       .from('team_invitations')

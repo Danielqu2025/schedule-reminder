@@ -32,6 +32,7 @@ if (Test-Path $envFile) {
     $envContent = Get-Content $envFile
     $hasSupabaseUrl = $envContent | Select-String -Pattern "^VITE_SUPABASE_URL"
     $hasSupabaseKey = $envContent | Select-String -Pattern "^VITE_SUPABASE_ANON_KEY"
+    $hasResendKey = $envContent | Select-String -Pattern "^RESEND_API_KEY"
     
     if ($hasSupabaseUrl) {
         Write-Host "   ✅ VITE_SUPABASE_URL 已配置" -ForegroundColor Green
@@ -44,6 +45,13 @@ if (Test-Path $envFile) {
     } else {
         Write-Host "   ❌ VITE_SUPABASE_ANON_KEY 未配置" -ForegroundColor Red
     }
+
+    if ($hasResendKey) {
+        Write-Host "   ✅ RESEND_API_KEY 已配置" -ForegroundColor Green
+    } else {
+        Write-Host "   ⚠️  RESEND_API_KEY 未配置 (推荐用于发送邀请邮件)" -ForegroundColor Yellow
+    }
+
 } else {
     Write-Host "   ❌ .env 文件不存在" -ForegroundColor Red
 }
@@ -86,5 +94,6 @@ Write-Host "2. 配置 SMTP（Supabase Dashboard）:" -ForegroundColor Yellow
 Write-Host "   Authentication > SMTP" -ForegroundColor White
 Write-Host ""
 Write-Host "3. 查看详细设置指南:" -ForegroundColor Yellow
-Write-Host "   docs\QUICK_EMAIL_SETUP.md" -ForegroundColor White
+Write-Host "   docs\SUPABASE_EDGE_FUNCTION_SETUP.md" -ForegroundColor White
+
 Write-Host ""
