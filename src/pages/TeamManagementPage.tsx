@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
+import { User } from '@supabase/supabase-js';
 import { Team, TeamMember, WorkGroup } from '../types/database';
 import { useToast } from '../hooks/useToast';
 import { validateLength } from '../utils/validation';
@@ -22,7 +23,12 @@ export default function TeamManagementPage() {
   const [showManageGroup, setShowManageGroup] = useState<number | null>(null);
   const [groupFormData, setGroupFormData] = useState({ name: '', description: '' });
   const [groupMembers, setGroupMembers] = useState<string[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setCurrentUser(user ?? null));
+  }, []);
 
   const loadTeamData = async () => {
     try {
@@ -207,10 +213,13 @@ export default function TeamManagementPage() {
       <div className="tab-content-premium">
         {activeTab === 'members' ? (
           <div className="members-section-premium">
-            <TeamInvitationManager 
-              teamId={teamId!} 
-              teamName={team.name} 
-              onInviteSuccess={loadTeamData} 
+            <TeamInvitationManager
+              teamId={teamId!}
+              teamName={team.name}
+              onInviteSuccess={loadTeamData}
+              canImportCsv={Boolean(
+                currentUser && members.some((m) => m.user_id === currentUser.id && (m.role === 'owner' || m.role === 'admin'))
+              )}
             />
 
             <div className="members-grid-premium">

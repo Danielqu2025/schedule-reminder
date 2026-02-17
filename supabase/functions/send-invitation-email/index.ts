@@ -137,6 +137,18 @@ async function sendCustomEmail(
   
   if (resendApiKey) {
     console.log('检测到 RESEND_API_KEY，正在通过 Resend 发送邮件...');
+    
+    // 从环境变量读取发件人地址，如果没有则使用默认值
+    // 注意：使用 onboarding@resend.dev 只能发送给已验证的邮箱（通常是注册 Resend 的邮箱）
+    // 要发送给所有邮箱，需要在 Resend 验证域名，并使用该域名的邮箱作为发件人
+    const fromEmail = Deno.env.get('RESEND_FROM_EMAIL') || 'Team <onboarding@resend.dev>';
+    const senderName = Deno.env.get('RESEND_SENDER_NAME') || 'ProjectFlow';
+    
+    // 格式化发件人地址
+    const formattedFrom = fromEmail.includes('<') ? fromEmail : `${senderName} <${fromEmail}>`;
+    
+    console.log(`准备发送邮件: from=${formattedFrom}, to=${email}`);
+    
     try {
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -145,7 +157,7 @@ async function sendCustomEmail(
           'Authorization': `Bearer ${resendApiKey}`,
         },
         body: JSON.stringify({
-          from: 'Team <onboarding@resend.dev>', // 默认测试发件人，生产环境需配置域名
+          from: formattedFrom,
           to: email,
           subject: subject,
           html: htmlBody,
@@ -155,18 +167,30 @@ async function sendCustomEmail(
       const data = await res.json();
       if (!res.ok) {
         console.error('Resend API 错误:', data);
+        
+        // 如果是 403 错误，提供更友好的提示
+        if (data.statusCode === 403 && data.message?.includes('only send testing emails')) {
+          console.error(`
+⚠️ Resend 免费版限制：使用 onboarding@resend.dev 只能发送给已验证的邮箱。
+解决方案：
+1. 在 Resend Dashboard (https://resend.com/domains) 验证一个域名
+2. 在 Supabase Edge Function Secrets 中添加 RESEND_FROM_EMAIL，值为：noreply@你的域名.com
+3. 重新部署 Edge Function：supabase functions deploy send-invitation-email
+          `);
+        }
+        throw new Error(`Resend API 错误: ${data.message || JSON.stringify(data)}`);
       } else {
         console.log('Resend 邮件发送成功:', data);
         return;
       }
     } catch (e) {
       console.error('调用 Resend 失败:', e);
+      throw e;
     }
   } else {
     console.log('未配置 RESEND_API_KEY，跳过自定义邮件发送。');
     console.log('模拟邮件内容:', { to: email, subject });
+    console.warn('提示：对于已注册用户，Supabase Auth 不会发送邀请邮件。请配置 RESEND_API_KEY 以发送通知。');
   }
-  
-  console.warn('提示：对于已注册用户，Supabase Auth 不会发送邀请邮件。请配置 RESEND_API_KEY 以发送通知。');
 }
 

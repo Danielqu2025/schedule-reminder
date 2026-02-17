@@ -30,3 +30,6 @@ database*.txt
 .env.local
 .env.production.local
 .env.development.local
+
+# Supabase CLI generated
+supabase/.temp

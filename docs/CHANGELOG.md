@@ -7,6 +7,28 @@
 
 ---
 
+## [3.0.0] - 2026-02-17
+
+### ✨ 新增
+
+**认证方式扩展**
+- **CSV 批量导入**：管理员/团队负责人可通过 CSV 批量导入邮箱与初始密码，用户直接加入 Supabase Auth 与当前团队
+- **首次登录强制改密**：导入用户首次登录须修改密码（`/change-password`），保障账户安全
+- Edge Function `import-users-csv`：服务端创建用户并写入 `team_members`，详见 [CSV_USER_IMPORT.md](./CSV_USER_IMPORT.md)
+
+**文档与配置**
+- 新增 `docs/CSV_USER_IMPORT.md`、`docs/sample-import-users.csv` 样板
+- Edge Function 部署说明中补充 `SUPABASE_ANON_KEY` 配置
+
+### 🔧 优化与清理
+
+- 移除源码中的调试用 agent log 请求（LoginPage、supabaseClient、supabase 配置）
+- `.gitignore` 增加 `supabase/.temp`，避免 CLI 生成文件被提交
+- 文档导航与 README 链接修正，移除已不存在的文档引用
+- 统一版本号为 3.0.0（package.json、README、DATABASE_SETUP.sql、CHANGELOG）
+
+---
+
 ## [2.0.3] - 2026-01-31
 
 ### 🐛 修复

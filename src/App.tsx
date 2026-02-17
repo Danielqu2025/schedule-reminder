@@ -12,6 +12,7 @@ const TaskManagementPage = lazy(() => import('./pages/TaskManagementPage'));
 const WorkItemPage = lazy(() => import('./pages/WorkItemPage'));
 const StatisticsPage = lazy(() => import('./pages/StatisticsPage'));
 const InviteAcceptPage = lazy(() => import('./pages/InviteAcceptPage'));
+const ChangePasswordPage = lazy(() => import('./pages/ChangePasswordPage'));
 
 // 布局组件
 import Layout from './components/Layout/Layout';
@@ -176,8 +177,20 @@ function App() {
             element={<InviteAcceptPage />}
           />
           <Route
+            path="/change-password"
+            element={user ? <ChangePasswordPage /> : <Navigate to="/login" replace />}
+          />
+          <Route
             path="/"
-            element={user ? <Layout user={user} /> : <Navigate to="/login" replace />}
+            element={
+              user
+                ? (user.user_metadata?.need_password_change === true ? (
+                    <Navigate to="/change-password" replace />
+                  ) : (
+                    <Layout user={user} />
+                  ))
+                : <Navigate to="/login" replace />
+            }
           >
             <Route index element={<PersonalSchedulePage />} />
             <Route path="teams" element={<TeamOverviewPage />} />

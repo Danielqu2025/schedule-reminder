@@ -9,6 +9,8 @@ interface TeamInvitationManagerProps {
   teamId: string;
   teamName: string;
   onInviteSuccess: () => void;
+  /** 是否允许通过 CSV 批量导入账户（仅管理员/负责人） */
+  canImportCsv?: boolean;
 }
 
 // Simple UUID generator fallback
@@ -22,11 +24,31 @@ function generateUUID() {
   });
 }
 
-export default function TeamInvitationManager({ teamId, teamName, onInviteSuccess }: TeamInvitationManagerProps) {
+/** 解析 CSV 文本为 { email, password }[]，支持表头 email,password 或直接每行 email,password */
+function parseCsvToUsers(csvText: string): { email: string; password: string }[] {
+  const lines = csvText.trim().split(/\r?\n/).filter(Boolean);
+  const rows: { email: string; password: string }[] = [];
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const parts = line.split(',').map((p) => p.trim().replace(/^["']|["']$/g, ''));
+    if (parts.length < 2) continue;
+    const email = (parts[0] ?? '').toLowerCase();
+    const password = parts[1] ?? '';
+    if (i === 0 && email === 'email' && (password === 'password' || password === '密码')) continue;
+    if (email && emailRegex.test(email) && password.length >= 6) {
+      rows.push({ email, password });
+    }
+  }
+  return rows;
+}
+
+export default function TeamInvitationManager({ teamId, teamName, onInviteSuccess, canImportCsv = false }: TeamInvitationManagerProps) {
 
   const [showInviteForm, setShowInviteForm] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [csvImportResult, setCsvImportResult] = useState<{ created: number; skipped: number; errors: { email: string; reason: string }[] } | null>(null);
   const [pendingInvitations, setPendingInvitations] = useState<TeamInvitation[]>([]);
   const { showSuccess, showError, ToastContainer } = useToast();
 
@@ -179,14 +201,90 @@ export default function TeamInvitationManager({ teamId, teamName, onInviteSucces
     }
   };
 
+  const handleCsvFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !canImportCsv) return;
+    setCsvImportResult(null);
+    setSubmitting(true);
+    try {
+      const text = await file.text();
+      const users = parseCsvToUsers(text);
+      if (users.length === 0) {
+        showError('CSV 中未找到有效行（需至少两列：邮箱、密码；密码至少 6 位）');
+        setSubmitting(false);
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke('import-users-csv', {
+        body: { teamId: parseInt(teamId, 10), users },
+      });
+      if (error) throw error;
+      const payload = data as { success?: boolean; created?: number; skipped?: number; errors?: { email: string; reason: string }[] };
+      setCsvImportResult({
+        created: payload?.created ?? 0,
+        skipped: payload?.skipped ?? 0,
+        errors: payload?.errors ?? [],
+      });
+      const created = payload?.created ?? 0;
+      if (created > 0) {
+        showSuccess(`已导入 ${created} 个账户，用户首次登录需修改密码`);
+        onInviteSuccess();
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '导入失败，请重试';
+      showError(msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <div className="team-invitation-manager">
       <div className="section-header-premium">
         <h3>核心成员</h3>
-        <button className="btn-primary-small" onClick={() => setShowInviteForm(!showInviteForm)}>
-          {showInviteForm ? '取消邀请' : '+ 邀请成员'}
-        </button>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {canImportCsv && (
+            <label className="btn-secondary-small" style={{ marginBottom: 0, cursor: 'pointer' }}>
+              📄 CSV 导入账户
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                onChange={handleCsvFileChange}
+                disabled={submitting}
+                style={{ display: 'none' }}
+              />
+            </label>
+          )}
+          <button className="btn-primary-small" onClick={() => setShowInviteForm(!showInviteForm)}>
+            {showInviteForm ? '取消邀请' : '+ 邀请成员'}
+          </button>
+        </div>
       </div>
+
+      {canImportCsv && (
+        <div className="csv-import-hint card" style={{ marginBottom: '16px', padding: '12px', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+          <strong>CSV 导入说明：</strong> 仅管理员/负责人可见。CSV 需包含两列：<code>email</code>、<code>password</code>（密码至少 6 位）。
+          导入后账户直接加入本团队，用户首次登录需修改密码。
+        </div>
+      )}
+
+      {csvImportResult && (
+        <div className="csv-import-result card" style={{ marginBottom: '16px', padding: '12px' }}>
+          <div>✅ 新建 {csvImportResult.created} 个</div>
+          {csvImportResult.skipped > 0 && <div>⏭ 跳过（已存在）{csvImportResult.skipped} 个</div>}
+          {csvImportResult.errors.length > 0 && (
+            <div style={{ marginTop: '8px' }}>
+              <strong>错误：</strong>
+              <ul style={{ margin: '4px 0 0', paddingLeft: '20px', fontSize: '0.85rem' }}>
+                {csvImportResult.errors.slice(0, 10).map((e, i) => (
+                  <li key={i}>{e.email}: {e.reason}</li>
+                ))}
+                {csvImportResult.errors.length > 10 && <li>…共 {csvImportResult.errors.length} 条</li>}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
 
       {showInviteForm && (
         <form onSubmit={handleInviteMember} className="invite-form-premium card slide-in">

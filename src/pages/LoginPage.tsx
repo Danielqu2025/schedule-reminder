@@ -76,7 +76,12 @@ export default function LoginPage() {
         }
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : '操作失败';
+      const isNetworkFailure =
+        err instanceof Error &&
+        (err.name === 'AuthRetryableFetchError' || err.message === 'Failed to fetch');
+      const errorMessage = isNetworkFailure
+        ? '无法连接 Supabase。请检查：1) Supabase 项目是否已暂停（免费版会自动暂停），请在 Dashboard 恢复；2) 本机网络；3) 在 Supabase Dashboard → Authentication → URL Configuration 中添加当前站点地址（如 http://127.0.0.1:3000）。'
+        : err instanceof Error ? err.message : '操作失败';
       setError(errorMessage);
       showError(errorMessage);
     } finally {

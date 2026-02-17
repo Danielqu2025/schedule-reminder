@@ -76,7 +76,10 @@ Dashboard 中：
 3. 添加/确认以下密钥：
    - `SUPABASE_URL`：项目 URL（一般已存在）
    - `SUPABASE_SERVICE_ROLE_KEY`：service_role 密钥
-   - `RESEND_API_KEY`：[Resend](https://resend.com) 的 API Key（推荐添加）
+   - `RESEND_API_KEY`：[Resend](https://resend.com) 的 API Key（必需）
+   - `RESEND_FROM_EMAIL`：发件人邮箱（可选，如 `noreply@yourdomain.com`，需在 Resend 验证域名）
+   - `RESEND_SENDER_NAME`：发件人名称（可选，如 `ProjectFlow`）
+   - **若使用 CSV 批量导入用户**（Edge Function `import-users-csv`）：需额外设置 `SUPABASE_ANON_KEY`（Settings → API → anon public key），用于在函数内验证调用方 JWT。详见 [CSV 批量导入用户说明](./CSV_USER_IMPORT.md)。
 
 若使用 CLI 设置（可选）：
 
@@ -189,8 +192,10 @@ curl -X POST "https://scewuzopntegumyekgbf.supabase.co/functions/v1/send-invitat
 
 - 当前逻辑会优先使用 `auth.admin.inviteUserByEmail`；若邮箱未注册，Supabase 会发邀请邮件。
 - 若邮箱已注册，**会自动切换到 Resend 服务发送邀请邮件**。
-- 请确保您已在 Resend 后台验证了您的域名，否则只能发给自己（onboarding@resend.dev）。
-- 若您希望所有人都能收到邮件，请参考 README.md 中关于 Resend 域名的配置。
+- 如果看到错误 `You can only send testing emails to your own email address`：
+  - **原因**：使用 `onboarding@resend.dev` 只能发送给已验证的邮箱（通常是注册 Resend 的邮箱）
+  - **解决**：在 [Resend Dashboard](https://resend.com/domains) 验证域名，然后在 Edge Function Secrets 中添加 `RESEND_FROM_EMAIL`（如 `noreply@yourdomain.com`）
+  - 重新部署 Edge Function：`supabase functions deploy send-invitation-email`
 
 
 ---

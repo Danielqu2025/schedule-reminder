@@ -2,13 +2,13 @@
 
 <div align="center">
 
-![Version](https://img.shields.io/badge/version-2.6.0-blue)
+![Version](https://img.shields.io/badge/version-3.0.0-blue)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
 现代化的团队协作和项目管理平台
 
-[快速开始](./GETTING_STARTED.md) • [优化总结](./OPTIMIZATION_SUMMARY.md) • [测试指南](./TESTING_GUIDE.md) • [完整报告](./FINAL_REPORT.md)
+[快速开始](./GETTING_STARTED.md) • [文档索引](./docs/README.md) • [更新日志](./docs/CHANGELOG.md)
 
 </div>
 
@@ -25,6 +25,7 @@
 ### 👥 团队协作
 - **团队管理**：创建团队、分配角色（Owner/Admin/Member）
 - **邮箱邀请**：便捷的成员邀请机制
+- **CSV 批量导入**：管理员/负责人可导入账户与初始密码，用户首次登录须修改密码（见 [CSV 导入说明](./docs/CSV_USER_IMPORT.md)）
 - **工作组**：灵活的小组划分，提升协作效率
 - **权限控制**：基于 RLS 的安全数据隔离
 
@@ -106,8 +107,8 @@ schedule-reminder/
 ├── docs/                     # 📚 完整文档
 │   ├── sql/                 # SQL 脚本
 │   ├── DESIGN_SYSTEM.md     # 设计系统
-│   ├── ICON_SYSTEM.md       # 图标规范
-│   ├── STORAGE_SETUP.md     # 存储配置
+│   ├── CSV_USER_IMPORT.md   # CSV 批量导入说明
+│   ├── sample-import-users.csv  # 导入样板
 │   └── ...
 ├── src/
 │   ├── components/          # React 组件
@@ -115,12 +116,9 @@ schedule-reminder/
 │   ├── utils/               # 工具函数
 │   ├── types/               # TypeScript 类型
 │   └── lib/                 # 核心库
-├── supabase/functions/      # Edge Functions
+├── supabase/functions/      # Edge Functions（邀请邮件、CSV 导入）
 ├── GETTING_STARTED.md       # 快速开始
-├── OPTIMIZATION_SUMMARY.md   # 优化总结
-├── OPTIMIZATION_REPORT.md   # 详细报告
-├── TESTING_GUIDE.md         # 测试指南
-├── FINAL_REPORT.md          # 完成报告
+├── DEPLOYMENT_GUIDE.md      # 部署指南
 └── README.md                # 本文档
 ```
 
@@ -131,31 +129,26 @@ schedule-reminder/
 | 文档 | 说明 |
 |------|------|
 | [GETTING_STARTED.md](./GETTING_STARTED.md) | 🚀 快速开始（必读） |
-| [OPTIMIZATION_SUMMARY.md](./OPTIMIZATION_SUMMARY.md) | 🎯 优化总结 |
-| [OPTIMIZATION_REPORT.md](./OPTIMIZATION_REPORT.md) | 📊 详细优化报告 |
-| [TESTING_GUIDE.md](./TESTING_GUIDE.md) | 🧪 测试指南 |
-| [FINAL_REPORT.md](./FINAL_REPORT.md) | 🎊 完成报告 |
+| [docs/README.md](./docs/README.md) | 📚 文档索引 |
+| [docs/DEVELOPMENT_GUIDE.md](./docs/DEVELOPMENT_GUIDE.md) | 🛠 开发指南 |
+| [docs/CSV_USER_IMPORT.md](./docs/CSV_USER_IMPORT.md) | 📄 CSV 批量导入用户 |
 | [docs/CHANGELOG.md](./docs/CHANGELOG.md) | 📝 更新日志 |
+| [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) | 🚢 部署指南 |
 
 ---
 
-## 🚀 最新优化 (v2.3.0)
+## 🚀 最新更新 (v3.0.0)
 
-### 核心改进
+### 认证与成员管理
 
-1. **✨ API层抽象** - 完整的API层（400行代码）
-2. **✨ React Query集成** - 企业级数据管理
-3. **✨ 骨架屏系统** - 优雅的加载体验
-4. **✨ 安全性提升** - IndexedDB缓存
-5. **✨ 完整测试框架** - Vitest + Mock工具
+1. **✨ CSV 批量导入** - 管理员/负责人通过 CSV 导入邮箱与初始密码，直接写入 Supabase Auth 并加入团队
+2. **✨ 首次登录改密** - 导入用户首次登录强制修改密码，保障账户安全
+3. **📄 导入样板** - `docs/sample-import-users.csv`，详见 [CSV 导入说明](./docs/CSV_USER_IMPORT.md)
 
-### 性能提升
+### 项目整理
 
-- **0个ESLint错误**（从8个减少100%）
-- **智能缓存** - 5分钟自动缓存
-- **骨架屏** - 优化加载状态
-
-详见：[OPTIMIZATION_REPORT.md](./OPTIMIZATION_REPORT.md)
+- 移除调试用 agent log 代码
+- 文档链接与项目结构说明更新，版本号统一为 3.0.0
 
 ---
 
@@ -226,6 +219,12 @@ npm run preview
 ---
 
 ## 📝 更新日志
+
+### v3.0.0 (2026-02-17)
+
+- ✨ CSV 批量导入用户（管理员/负责人），首次登录强制修改密码
+- ✨ Edge Function `import-users-csv`，文档与样板 `docs/CSV_USER_IMPORT.md`、`docs/sample-import-users.csv`
+- 🔧 移除调试代码，文档与版本号统一
 
 ### v2.6.0 (2026-02-07)
 
